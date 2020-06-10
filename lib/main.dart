@@ -16,6 +16,13 @@ class EpitrackApp extends StatelessWidget {
       home: ShowsScreen(),
     );
   }
+
+  //Returns a Show object with the given name
+  static Show getShowByName(String name){
+    return showsList.singleWhere((element){
+      return element._name == name;
+    });
+  }
 }
 
 class ShowsScreen extends StatefulWidget {
@@ -31,7 +38,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) => NewShowScreen()))
-            .then((value){
+            .then((_){
               setState((){
                 //Updates ListView state
               });
@@ -56,7 +63,13 @@ class _ShowsScreenState extends State<ShowsScreen> {
         
         //Only adds tiles while there are still items in the list
         if(showIndex < EpitrackApp.showsList.length){
-          return ListTile(title: Text(EpitrackApp.showsList[showIndex]._name));
+          String showName = EpitrackApp.showsList[showIndex]._name;
+          return ListTile(
+            title: Text(showName),
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ShowDetailsScreen(showName)));
+            }
+          );
         }
         else{
           return null;
@@ -78,7 +91,12 @@ class _NewShowScreenState extends State<NewShowScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Epitrack | New show')),
-      body: Form(
+      body: _buildNewShowForm()
+    );
+  }
+
+  Widget _buildNewShowForm(){
+    return Form(
         key: _formKey,
         child: Column(
           children: <Widget>[
@@ -101,7 +119,7 @@ class _NewShowScreenState extends State<NewShowScreen> {
                   //Form is okay, add show
                   _formKey.currentState.save();
                   EpitrackApp.showsList.add(_newShow);
-                  print("Added $_newShow!");  //DEBUG PRINT
+                  print("Added '$_newShow!'\n   " + _newShow.toJson().toString());  //DEBUG PRINT
                   Navigator.pop(context, _newShow); //Returns to previous screen
                 } else {
                   //Form isn't okay
@@ -111,10 +129,34 @@ class _NewShowScreenState extends State<NewShowScreen> {
             )
           ]
         )
-      )
-    );
+      );
   }
 
+}
+
+class ShowDetailsScreen extends StatefulWidget{
+  final String _showName;
+
+  //Constructor
+  ShowDetailsScreen(this._showName);
+
+  @override
+  _ShowDetailsScreenState createState() => _ShowDetailsScreenState(this._showName);
+}
+class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
+  String _showName;
+
+  //Constructor
+  _ShowDetailsScreenState(this._showName);
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text('Epitrack | Show details')),
+      body: Text(EpitrackApp.getShowByName(_showName).getName())
+    );
+  }
+  
 }
 
 class Show {
@@ -129,4 +171,13 @@ class Show {
 
   @override
   String toString() => this._name;
+
+  //Json
+  Show.fromJson (Map<String, dynamic> json)
+    : _name = json['name'];
+
+  Map<String, dynamic> toJson() =>
+    {
+      'name': _name
+    };
 }
