@@ -54,14 +54,14 @@ class _ShowsScreenState extends State<ShowsScreen> {
   Widget _buildShowsList() {
     return ListView.builder(
       itemBuilder: (BuildContext context, int listIndex) {
-        //Adds dividers between items
+        // Adds dividers between items
         if (listIndex.isOdd) {
           return Divider();
         }
 
-        final int showIndex = listIndex ~/ 2; //Adjusts index to take into account the dividers in the list
+        final int showIndex = listIndex ~/ 2; // Adjusts index to take into account the dividers in the list
         
-        //Only adds tiles while there are still items in the list
+        // Only adds tiles while there are still items in the list
         if(showIndex < EpitrackApp.showsList.length){
           String showName = EpitrackApp.showsList[showIndex]._name;
           return ListTile(
@@ -144,35 +144,187 @@ class ShowDetailsScreen extends StatefulWidget{
   _ShowDetailsScreenState createState() => _ShowDetailsScreenState(this._showName);
 }
 class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
-  String _showName;
+  Show _show;
 
   //Constructor
-  _ShowDetailsScreenState(this._showName);
+  _ShowDetailsScreenState(String showName){
+    _show = EpitrackApp.getShowByName(showName);
+  }
 
   @override
   Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | Show details')),
-      body: Text(EpitrackApp.getShowByName(_showName).getName())
+    return DefaultTabController(
+        length: 3,
+        child: Scaffold( 
+          appBar: AppBar(
+            title: Text('Epitrack | ' + _show.getName()),
+            bottom: TabBar(
+              tabs: [
+                //Tab headers
+                Tab(text: 'Details'),
+                Tab(text: 'Seasons'),
+                Tab(text: 'Episodes')
+              ]
+            )
+          ),
+          body: TabBarView(
+            children: [
+              //Tab content
+              _buildDetailsTab(),
+              _buildSeasonsTab(),
+              _buildEpisodesTab(),
+            ],
+          )
+        )
     );
+  }
+
+  Widget _buildDetailsTab(){
+    return Scaffold(
+      body: Text(_show.getName())
+    );
+  }
+
+  Widget _buildSeasonsTab(){
+    return Scaffold(
+      body: _buildSeasonsList(),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'New season',
+        child: Icon(Icons.add),
+        backgroundColor: Colors.green,
+        onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => NewSeasonScreen(_show)))
+            .then((_){
+              setState((){
+                //Updates ListView state
+              });
+            });
+        }
+      )
+    );
+  }
+
+  Widget _buildSeasonsList(){
+    return ListView.builder(
+      itemBuilder: (BuildContext context, int listIndex){
+        // Adds dividers between items
+        if(listIndex.isOdd){
+          return Divider();
+        }
+
+        final int seasonIndex = listIndex ~/ 2; // Adjusts index to take into account the dividers in the list
+
+        if(seasonIndex < _show.getSeasons().length){
+          Season _season = _show.getSeasons()[seasonIndex];
+
+          return ListTile(
+            title: Text('S' + _season.getNumber().toString() + '   ' + _season.getName())
+          );
+        }
+        else{
+          return null;
+        }
+
+      }
+    );
+  }
+
+  Widget _buildEpisodesTab(){
+    return Text('episodes tab');
   }
   
 }
 
+class NewSeasonScreen extends StatefulWidget {
+  final Show _show;
+
+  // Constructor
+  NewSeasonScreen(this._show);
+
+  @override
+  _NewSeasonScreenState createState() => _NewSeasonScreenState(this._show);
+}
+class _NewSeasonScreenState extends State<NewSeasonScreen> {
+  Show _show;
+  final _formKey = GlobalKey<FormState>();
+  String _newSeasonName;
+
+  // Constructor
+  _NewSeasonScreenState(this._show);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Epitrack | New season')),
+      body: _buildNewSeasonForm()
+    );
+  }
+
+  Widget _buildNewSeasonForm(){
+    return Form(
+        key: _formKey,
+        child: Column(
+          children: <Widget>[
+            TextFormField(
+              decoration: InputDecoration(labelText: 'Name'),
+              onSaved: (String value) {
+                _newSeasonName = value;
+              },
+            ),
+            RaisedButton(
+              child: Text('Add'),
+              onPressed: () {
+                if (_formKey.currentState.validate()) {
+                  //Form is okay, add season
+                  _formKey.currentState.save();
+                  _show.addSeason(name: _newSeasonName);
+                  print("Added season '$_newSeasonName' to '$_show.getName()'");  //DEBUG PRINT
+                  Navigator.pop(context); //Returns to previous screen
+                } else {
+                  //Form isn't okay
+                  print('Error adding season!');  //DEBUG PRINT
+                }
+              },
+            )
+          ]
+        )
+      );
+  }
+
+}
+
+
 class Show {
   String _name;
+  List<Season> _seasons = List<Season>();
 
-  //Constructor
+  // Constructor
   Show(this._name);
 
-  //Name getters/setters
+  // Name getters/setters
   String getName() => this._name;
   void setName(String newName) => this._name = newName;
+
+  // Returns list of seasons
+  List<Season> getSeasons() => this._seasons;
+  // Adds a new season using the appropriate season number
+  void addSeason({String name=""}){
+    int nextSeasonNumber;
+    
+    if(this._seasons.isEmpty){
+      nextSeasonNumber = 1;
+    }
+    else{
+      nextSeasonNumber = this._seasons.last.getNumber() + 1;
+    }
+
+    this._seasons.add(Season(nextSeasonNumber, name));
+  }
 
   @override
   String toString() => this._name;
 
-  //Json
+  // JSON
   Show.fromJson (Map<String, dynamic> json)
     : _name = json['name'];
 
@@ -180,4 +332,28 @@ class Show {
     {
       'name': _name
     };
+}
+
+class Season{
+  int _number;
+  String _name;
+
+  Season(this._number, this._name);
+
+  int getNumber() => this._number;
+  void setNumber(int number) => this._number = number;
+
+  String getName() => this._name;
+  void setName(String name) => this._name = name;
+
+  // JSON
+  Season.fromJson(Map<String, dynamic> json)
+    : _number = json['number'],
+      _name = json['name'];
+  Map<String, dynamic> toJson() =>
+    {
+      'number': _number,
+      'name': _name
+    };
+
 }
