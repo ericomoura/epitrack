@@ -218,7 +218,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           Season _season = _show.getSeasons()[seasonIndex];
 
           return ListTile(
-            title: Text('S' + _season.getNumber().toString() + '   ' + _season.getName())
+            title: Text(_season.toString())
           );
         }
         else{
@@ -262,9 +262,19 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
         if(_show.getEpisodes().isNotEmpty){
           ExpansionTile noSeasonTile = ExpansionTile(
             title: Text('No season'),
+            backgroundColor: Colors.green[200],
             children: _show.getEpisodes().map((episode){
               return ListTile(
                 title: Text(episode.toString()),
+                trailing: IconButton(
+                  icon: Icon(episode.getWatched() ? Icons.check_circle : Icons.check_circle_outline),
+                  color: episode.getWatched() ? Colors.green : null,
+                  onPressed: (){
+                    setState((){
+                      episode.setWatched(!episode.getWatched());  // Toggles watched
+                    });
+                  }
+                )
               );
             }).toList(),
           );
@@ -274,9 +284,19 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
         for(Season season in _show.getSeasons()){
           ExpansionTile seasonTile = ExpansionTile(
             title: Text(season.toString()),
+            backgroundColor: Colors.green[200],
             children: season.getEpisodes().map((episode){
               return ListTile(
-                title: Text('S'+season.getNumber().toString()+episode.toString())
+                title: Text('S'+season.getNumber().toString()+episode.toString()),
+                trailing: IconButton(
+                  icon: Icon(episode.getWatched() ? Icons.check_circle : Icons.check_circle_outline),
+                  color: episode.getWatched() ? Colors.green : null,
+                  onPressed: (){
+                    setState((){
+                      episode.setWatched(!episode.getWatched());  // Toggles watched
+                    });
+                  }
+                )
               );
             }).toList()
           );
@@ -570,12 +590,18 @@ class Episode{
   int _number;
   String _name;
   String _type;
+  bool _watched;
 
   Episode(int number, {String name="", String type}){
     this._number = number;
     this._name = name;
     type == null ? this._type = Constants.EPISODETYPES['Episode'] : this._type = type;
+    this._watched = false;
   }
+
+
+  bool getWatched() => this._watched;
+  void setWatched(bool newStatus) => this._watched = newStatus;
 
   String getType() => this._type;
   void setType(String type) => this._type = type;
@@ -591,11 +617,15 @@ class Episode{
   // JSON
   Episode.fromJson(Map<String, dynamic> json)
     : _number = json['number'],
-      _name = json['name'];
+      _name = json['name'],
+      _type = json['type'],
+      _watched = json['watched'];
   Map<String, dynamic> toJson() =>
     {
       'number': _number,
-      'name': _name
+      'name': _name,
+      'type': _type,
+      'watched': _watched
     };
 }
 
