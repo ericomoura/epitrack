@@ -258,16 +258,18 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
         
         // Builds a list of ExpansionTiles with all seasons and episodes
         List<ExpansionTile> seasonsList = List<ExpansionTile>();
-        // Episodes with no season
-        ExpansionTile noSeasonTile = ExpansionTile(
-          title: Text('No season'),
-          children: _show.getEpisodes().map((episode){
-            return ListTile(
-              title: Text(episode.toString()),
-            );
-          }).toList(),
-        );
-        seasonsList.add(noSeasonTile);
+        // Episodes with no season (if there are any)
+        if(_show.getEpisodes().isNotEmpty){
+          ExpansionTile noSeasonTile = ExpansionTile(
+            title: Text('No season'),
+            children: _show.getEpisodes().map((episode){
+              return ListTile(
+                title: Text(episode.toString()),
+              );
+            }).toList(),
+          );
+          seasonsList.add(noSeasonTile);
+        }
         // Episodes in each season
         for(Season season in _show.getSeasons()){
           ExpansionTile seasonTile = ExpansionTile(
@@ -367,6 +369,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
 
   List<Season> _seasons = List<Season>();  // All seasons, including "no season"
   Season _selectedSeason;  // Season currently selected in the dropdown menu
+  String _selectedType;  // Episode type currently selected in the dropdown menu
 
   // Constructor
   _NewEpisodeScreenState(Show show){
@@ -397,13 +400,27 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             onChanged: (newValue){
               setState((){
                 _selectedSeason = newValue;
-                print(_selectedSeason);
               });
             },
             items: _seasons.map((season){
               return DropdownMenuItem(
-                child: new Text(season.toString()),
+                child: new Text(season.getNumber() == 0 ? season.getName() : season.toString()),  // Returns only name for season 0 (no season)
                 value: season
+              );
+            }).toList()
+          ),
+          DropdownButton(
+            hint: Text('Select an episode type'),
+            value: _selectedType,
+            onChanged: (newValue){
+              setState((){
+                _selectedType = newValue;
+              });
+            },
+            items: Constants.EPISODETYPES.keys.map((type){
+              return DropdownMenuItem(
+                child: new Text(type),
+                value: Constants.EPISODETYPES[type]
               );
             }).toList()
           ),
@@ -418,8 +435,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             onPressed: (){
               if(_formKey.currentState.validate()){  // Form is okay, add episode
                 _formKey.currentState.save();
-                _show.addEpisode(name: _newEpisodeName, season: _selectedSeason);
-                print("Added episode '$_newEpisodeName' to season '$_selectedSeason' of '$_show'");  // DEBUG PRING
+                _show.addEpisode(name: _newEpisodeName, season: _selectedSeason, type: _selectedType);
                 Navigator.pop(context);
               }
               else{  // Form isn't okay
@@ -448,25 +464,25 @@ class Show {
   // Returns list of episodes
   List<Episode> getEpisodes() => this._episodes;
   // Adds a new episode using the appropriate episode number
-  void addEpisode({String name="", Season season}){
-    int _nextEpisodeNumber;
-    List<Episode> episodesList;
-
+  void addEpisode({String name="", Season season, String type}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
-      episodesList = this._episodes;
+      int _nextEpisodeNumber;
+      Iterable<Episode> _sameTypeEpisodes = this._episodes.where( (episode){return episode.getType() == type;} );
+
+      if(_sameTypeEpisodes.isEmpty){
+        _nextEpisodeNumber = 1;
+      }
+      else{
+        _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
+      }
+
+      this._episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
     }
-    else{
-      episodesList = season.getEpisodes();
+    else{  // Calls the season's addEpisode() function
+      season.addEpisode(name: name, type: type);
     }
 
-    if(episodesList.isEmpty){
-      _nextEpisodeNumber = 1;
-    }
-    else{
-      _nextEpisodeNumber = episodesList.last.getNumber() + 1;
-    }
-
-    episodesList.add(Episode(_nextEpisodeNumber, name));
+    
   }
 
   // Returns list of seasons
@@ -521,17 +537,18 @@ class Season{
   // Returns list of episodes
   List<Episode> getEpisodes() => this._episodes;
   // Adds a new episode using the appropriate season number
-  void addEpisode({String name=""}){
-    int nextEpisodeNumber;
+  void addEpisode({String name="", String type='E'}){
+    int _nextEpisodeNumber;
+    List<Episode> _sameTypeEpisodes = this._episodes.where( (episode){return episode.getType() == type;} ).toList();
     
-    if(this._episodes.isEmpty){
-      nextEpisodeNumber = 1;
+    if(_sameTypeEpisodes.isEmpty){
+      _nextEpisodeNumber = 1;
     }
     else{
-      nextEpisodeNumber = this._episodes.last.getNumber() + 1;
+      _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
     }
 
-    this._episodes.add(Episode(nextEpisodeNumber, name));
+    this._episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
   }
 
   // Prints number of season and name if it has one (e.g. S01: Season Name)
@@ -552,9 +569,16 @@ class Season{
 class Episode{
   int _number;
   String _name;
-  String type = Constants.ETYPE_EPISODE;
+  String _type;
 
-  Episode(this._number, this._name);
+  Episode(int number, {String name="", String type}){
+    this._number = number;
+    this._name = name;
+    type == null ? this._type = Constants.EPISODETYPES['Episode'] : this._type = type;
+  }
+
+  String getType() => this._type;
+  void setType(String type) => this._type = type;
 
   int getNumber() => this._number;
   void setNumber(int number) => this._number = number;
@@ -562,7 +586,7 @@ class Episode{
   String getName() => this._name;
   void setName(String name) => this._name = name;
 
-  String toString() => this._name.isEmpty ? this.type+this._number.toString() : this.type+this._number.toString()+': '+this._name;
+  String toString() => this._name.isEmpty ? this._type+this._number.toString() : this._type+this._number.toString()+': '+this._name;
 
   // JSON
   Episode.fromJson(Map<String, dynamic> json)
@@ -576,7 +600,10 @@ class Episode{
 }
 
 class Constants{
-  static const ETYPE_EPISODE = 'E';
-  static const ETYPE_MOVIE = 'M';
-  static const ETYPE_OVA = 'OVA';
+  static const EPISODETYPES = {
+    'Episode' : 'E',
+    'Movie' : 'M',
+    'Special' : 'SP',
+    'OVA' : 'OVA'
+  };
 }
