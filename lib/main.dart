@@ -255,28 +255,39 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
         if(listIndex.isOdd){
           return Divider();
         }
-
-        final int episodeIndex = listIndex ~/ 2; // Adjusts index to take into account the dividers in the list
-        List<String> _allEpisodeNames = List<String>();  // List of all episode names of all seasons
-
-        for (Episode episode in _show.getEpisodes()){
-          _allEpisodeNames.add(episode.toString());
-        }
-        for (Season season in _show.getSeasons()){
-          for (Episode episode in season.getEpisodes()){
-            _allEpisodeNames.add('S'+season.getNumber().toString() + episode.toString());
-          }
-        }
-
-        if(episodeIndex < _allEpisodeNames.length){
-          return ListTile(
-            title: Text(_allEpisodeNames[episodeIndex])
+        
+        // Builds a list of ExpansionTiles with all seasons and episodes
+        List<ExpansionTile> seasonsList = List<ExpansionTile>();
+        // Episodes with no season
+        ExpansionTile noSeasonTile = ExpansionTile(
+          title: Text('No season'),
+          children: _show.getEpisodes().map((episode){
+            return ListTile(
+              title: Text(episode.toString()),
+            );
+          }).toList(),
+        );
+        seasonsList.add(noSeasonTile);
+        // Episodes in each season
+        for(Season season in _show.getSeasons()){
+          ExpansionTile seasonTile = ExpansionTile(
+            title: Text(season.toString()),
+            children: season.getEpisodes().map((episode){
+              return ListTile(
+                title: Text('S'+season.getNumber().toString()+episode.toString())
+              );
+            }).toList()
           );
+          seasonsList.add(seasonTile);
+        }
+
+        final int tileIndex = listIndex ~/ 2; // Adjusts index to take into account the dividers in the list
+        if(tileIndex < seasonsList.length){
+          return seasonsList[tileIndex];
         }
         else{
           return null;
         }
-
 
       },
     );
@@ -541,6 +552,7 @@ class Season{
 class Episode{
   int _number;
   String _name;
+  String type = Constants.ETYPE_EPISODE;
 
   Episode(this._number, this._name);
 
@@ -550,7 +562,7 @@ class Episode{
   String getName() => this._name;
   void setName(String name) => this._name = name;
 
-  String toString() => this._name.isEmpty ? 'E'+this._number.toString() : 'E'+this._number.toString()+': '+this._name;
+  String toString() => this._name.isEmpty ? this.type+this._number.toString() : this.type+this._number.toString()+': '+this._name;
 
   // JSON
   Episode.fromJson(Map<String, dynamic> json)
@@ -561,4 +573,10 @@ class Episode{
       'number': _number,
       'name': _name
     };
+}
+
+class Constants{
+  static const ETYPE_EPISODE = 'E';
+  static const ETYPE_MOVIE = 'M';
+  static const ETYPE_OVA = 'OVA';
 }
