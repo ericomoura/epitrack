@@ -276,7 +276,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                   }
                 )
               );
-            }).toList(),
+            }).toList().expand((element) => [element, Divider(thickness: 0.75)]).toList()
           );
           seasonsList.add(noSeasonTile);
         }
@@ -298,7 +298,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                   }
                 )
               );
-            }).toList()
+            }).toList().expand((element) => [element, Divider(thickness: 0.75)]).toList()
           );
           seasonsList.add(seasonTile);
         }
@@ -414,7 +414,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
       key: _formKey,
       child: Column(
         children: <Widget>[
-          DropdownButton(
+          DropdownButton(  // Season dropdown
             hint: Text('Select a season'),
             value: _selectedSeason,
             onChanged: (newValue){
@@ -429,7 +429,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
               );
             }).toList()
           ),
-          DropdownButton(
+          DropdownButton(  // Episode type dropdown
             hint: Text('Select an episode type'),
             value: _selectedType,
             onChanged: (newValue){
@@ -444,18 +444,21 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
               );
             }).toList()
           ),
-          TextFormField(
+          TextFormField(  // Episode name text box
             decoration: InputDecoration(labelText: 'Name'),
             onSaved: (String value){
               _newEpisodeName = value;
             },
           ),
-          RaisedButton(
+          RaisedButton(  // Submit button
             child: Text('Add'),
             onPressed: (){
               if(_formKey.currentState.validate()){  // Form is okay, add episode
                 _formKey.currentState.save();
-                _show.addEpisode(name: _newEpisodeName, season: _selectedSeason, type: _selectedType);
+
+                _show.addEpisode(name: _newEpisodeName, 
+                                season: _selectedSeason, 
+                                type: _selectedType == null ? Constants.EPISODETYPES['Episode'] : _selectedType);  // Defaults to type 'Episode'
                 Navigator.pop(context);
               }
               else{  // Form isn't okay
@@ -497,6 +500,7 @@ class Show {
       }
 
       this._episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
+      print(type);
     }
     else{  // Calls the season's addEpisode() function
       season.addEpisode(name: name, type: type);
@@ -597,6 +601,8 @@ class Episode{
     this._name = name;
     type == null ? this._type = Constants.EPISODETYPES['Episode'] : this._type = type;
     this._watched = false;
+
+    print('Given type: ' + type.toString() + ' / Final type: ' + this._type);
   }
 
 
