@@ -1,12 +1,20 @@
+import 'dart:io';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'main.g.dart';
 
 void main() => runApp(EpitrackApp());
 
 class EpitrackApp extends StatelessWidget {
-  static final List<Show> showsList = List<Show>();
+  static List<Show> showsList = List<Show>();
 
   @override
   Widget build(BuildContext context) {
+    EpitrackApp.loadShowsFromJson();
     return MaterialApp(
       title: 'Epitrack',
       theme: ThemeData(
@@ -20,9 +28,44 @@ class EpitrackApp extends StatelessWidget {
   //Returns a Show object with the given name
   static Show getShowByName(String name){
     return showsList.singleWhere((element){
-      return element._name == name;
+      return element.name == name;
     });
   }
+
+  static void saveShowsToJson() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final path = dir.path;
+    final fileName = 'shows.json';
+    File file = File('$path/$fileName');
+
+    // Encodes each show individually and separates them with \n
+    String  jsonOutput = "";
+    for(Show show in EpitrackApp.showsList){
+      jsonOutput += json.encode(show.toJson()) + '\n';
+    }
+
+    file.writeAsStringSync(jsonOutput);
+  }
+
+  static void loadShowsFromJson() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final path = dir.path;
+    final fileName = 'shows.json';
+    File file = File('$path/$fileName');
+
+    String jsonInput = file.readAsStringSync();
+    List<String> jsonStrings = jsonInput.split('\n');
+    List<Show> shows = List<Show>();
+    //Decodes each line individually and adds it to the list
+    for(String jsonString in jsonStrings){
+      if(jsonString.isNotEmpty){
+        shows.add(Show.fromJson(json.decode(jsonString)));
+      }
+    }
+
+    EpitrackApp.showsList = shows;
+  }
+
 }
 
 class ShowsScreen extends StatefulWidget {
@@ -63,7 +106,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
         
         // Only adds tiles while there are still items in the list
         if(showIndex < EpitrackApp.showsList.length){
-          String showName = EpitrackApp.showsList[showIndex]._name;
+          String showName = EpitrackApp.showsList[showIndex].name;
           return ListTile(
             title: Text(showName),
             onTap: (){
@@ -77,6 +120,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
       }
     );
   }
+
 }
 
 class NewShowScreen extends StatefulWidget {
@@ -119,7 +163,7 @@ class _NewShowScreenState extends State<NewShowScreen> {
                   //Form is okay, add show
                   _formKey.currentState.save();
                   EpitrackApp.showsList.add(_newShow);
-                  print("Added '$_newShow!'\n   " + _newShow.toJson().toString());  //DEBUG PRINT
+                  EpitrackApp.saveShowsToJson();  // Saves to persistent storage
                   Navigator.pop(context, _newShow); //Returns to previous screen
                 } else {
                   //Form isn't okay
@@ -359,7 +403,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
                 if (_formKey.currentState.validate()) {  // Form is okay, add season
                   _formKey.currentState.save();
                   _show.addSeason(name: _newSeasonName);
-                  print("Added season '$_newSeasonName' to '$_show'");  // DEBUG PRINT
+                  EpitrackApp.saveShowsToJson();  // Saves to persistent storage
                   Navigator.pop(context); // Returns to previous screen
                 } else {  // Form isn't okay
                   print('Error adding season!');  // DEBUG PRINT
@@ -459,6 +503,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                 _show.addEpisode(name: _newEpisodeName, 
                                 season: _selectedSeason, 
                                 type: _selectedType == null ? Constants.EPISODETYPES['Episode'] : _selectedType);  // Defaults to type 'Episode'
+                EpitrackApp.saveShowsToJson();  // Saves to persistent storage
                 Navigator.pop(context);
               }
               else{  // Form isn't okay
@@ -472,25 +517,26 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   }
 }
 
+@JsonSerializable(explicitToJson: true)
 class Show {
-  String _name;
-  List<Season> _seasons = List<Season>();
-  List<Episode> _episodes = List<Episode>();  // Episodes that don't have a season (e.g. specials, OVAs, etc.)
+  String name;
+  List<Season> seasons = List<Season>();
+  List<Episode> episodes = List<Episode>();  // Episodes that don't have a season (e.g. specials, OVAs, etc.)
 
   // Constructor
-  Show(this._name);
+  Show(this.name);
 
   // Name getters/setters
-  String getName() => this._name;
-  void setName(String newName) => this._name = newName;
+  String getName() => this.name;
+  void setName(String newName) => this.name = newName;
 
   // Returns list of episodes
-  List<Episode> getEpisodes() => this._episodes;
+  List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
   void addEpisode({String name="", Season season, String type}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int _nextEpisodeNumber;
-      Iterable<Episode> _sameTypeEpisodes = this._episodes.where( (episode){return episode.getType() == type;} );
+      Iterable<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} );
 
       if(_sameTypeEpisodes.isEmpty){
         _nextEpisodeNumber = 1;
@@ -499,8 +545,7 @@ class Show {
         _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
       }
 
-      this._episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
-      print(type);
+      this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
     }
     else{  // Calls the season's addEpisode() function
       season.addEpisode(name: name, type: type);
@@ -510,60 +555,69 @@ class Show {
   }
 
   // Returns list of seasons
-  List<Season> getSeasons() => this._seasons;
+  List<Season> getSeasons() => this.seasons;
   // Adds a new season using the appropriate season number
   void addSeason({String name=""}){
     int _nextSeasonNumber;
     
-    if(this._seasons.isEmpty){
+    if(this.seasons.isEmpty){
       _nextSeasonNumber = 1;
     }
     else{
-      _nextSeasonNumber = this._seasons.last.getNumber() + 1;
+      _nextSeasonNumber = this.seasons.last.getNumber() + 1;
     }
 
-    this._seasons.add(Season(_nextSeasonNumber, name));
+    this.seasons.add(Season(_nextSeasonNumber, name));
   }
   // Returns the season with the given name
   Season getSeasonByName(String name){
-    return _seasons.singleWhere((element){
-      return element._name == name;
+    return seasons.singleWhere((element){
+      return element.name == name;
     });
   }
 
 
   @override
-  String toString() => this._name;
+  String toString() => this.name;
 
+  factory Show.fromJson(Map<String, dynamic> json) => _$ShowFromJson(json);
+  Map<String, dynamic> toJson() => _$ShowToJson(this);
+
+  /*DEBUG json
   // JSON
   Show.fromJson (Map<String, dynamic> json)
-    : _name = json['name'];
+    : _name = json['name'],
+      _seasons = json['seasons'],
+      _episodes = json['episodes'];
 
   Map<String, dynamic> toJson() =>
     {
-      'name': _name
-    };
+      'name': _name,
+      'seasons': _seasons,
+      'episodes': _episodes
+    };*/
 }
 
+@JsonSerializable(explicitToJson: true)
 class Season{
-  int _number;
-  String _name;
-  List<Episode> _episodes = List<Episode>();
+  int number;
+  String name;
+  List<Episode> episodes = List<Episode>();
 
-  Season(this._number, this._name);
+  Season(this.number, this.name);
 
-  int getNumber() => this._number;
-  void setNumber(int number) => this._number = number;
+  int getNumber() => this.number;
+  void setNumber(int number) => this.number = number;
 
-  String getName() => this._name;
-  void setName(String name) => this._name = name;
+  String getName() => this.name;
+  void setName(String name) => this.name = name;
 
   // Returns list of episodes
-  List<Episode> getEpisodes() => this._episodes;
+  List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate season number
   void addEpisode({String name="", String type='E'}){
     int _nextEpisodeNumber;
-    List<Episode> _sameTypeEpisodes = this._episodes.where( (episode){return episode.getType() == type;} ).toList();
+    List<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} ).toList();
     
     if(_sameTypeEpisodes.isEmpty){
       _nextEpisodeNumber = 1;
@@ -572,54 +626,63 @@ class Season{
       _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
     }
 
-    this._episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
+    this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
   }
 
   // Prints number of season and name if it has one (e.g. S01: Season Name)
-  String toString() => this._name.isEmpty ? 'S'+this._number.toString() : 'S'+this._number.toString()+': '+this._name;
+  String toString() => this.name.isEmpty ? 'S'+this.number.toString() : 'S'+this.number.toString()+': '+this.name;
 
+  factory Season.fromJson(Map<String, dynamic> json) => _$SeasonFromJson(json);
+  Map<String, dynamic> toJson() => _$SeasonToJson(this);
+
+  /*DEBUG json
   // JSON
   Season.fromJson(Map<String, dynamic> json)
     : _number = json['number'],
-      _name = json['name'];
+      _name = json['name'],
+      _episodes = json['episodes'];
   Map<String, dynamic> toJson() =>
     {
       'number': _number,
-      'name': _name
-    };
+      'name': _name,
+      'episodes': _episodes
+    };*/
 
 }
 
+@JsonSerializable(explicitToJson: true)
 class Episode{
-  int _number;
-  String _name;
-  String _type;
-  bool _watched;
+  int number;
+  String name;
+  String type;
+  bool watched;
 
   Episode(int number, {String name="", String type}){
-    this._number = number;
-    this._name = name;
-    type == null ? this._type = Constants.EPISODETYPES['Episode'] : this._type = type;
-    this._watched = false;
-
-    print('Given type: ' + type.toString() + ' / Final type: ' + this._type);
+    this.number = number;
+    this.name = name;
+    type == null ? this.type = Constants.EPISODETYPES['Episode'] : this.type = type;
+    this.watched = false;
   }
 
 
-  bool getWatched() => this._watched;
-  void setWatched(bool newStatus) => this._watched = newStatus;
+  bool getWatched() => this.watched;
+  void setWatched(bool newStatus) => this.watched = newStatus;
 
-  String getType() => this._type;
-  void setType(String type) => this._type = type;
+  String getType() => this.type;
+  void setType(String type) => this.type = type;
 
-  int getNumber() => this._number;
-  void setNumber(int number) => this._number = number;
+  int getNumber() => this.number;
+  void setNumber(int number) => this.number = number;
 
-  String getName() => this._name;
-  void setName(String name) => this._name = name;
+  String getName() => this.name;
+  void setName(String name) => this.name = name;
 
-  String toString() => this._name.isEmpty ? this._type+this._number.toString() : this._type+this._number.toString()+': '+this._name;
+  String toString() => this.name.isEmpty ? this.type+this.number.toString() : this.type+this.number.toString()+': '+this.name;
 
+
+  factory Episode.fromJson(Map<String, dynamic> json) => _$EpisodeFromJson(json);
+  Map<String, dynamic> toJson() => _$EpisodeToJson(this);
+  /*DEBUG json
   // JSON
   Episode.fromJson(Map<String, dynamic> json)
     : _number = json['number'],
@@ -632,7 +695,7 @@ class Episode{
       'name': _name,
       'type': _type,
       'watched': _watched
-    };
+    };*/
 }
 
 class Constants{
