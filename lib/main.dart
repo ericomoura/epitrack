@@ -14,7 +14,6 @@ class EpitrackApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    EpitrackApp.loadShowsFromJson();
     return MaterialApp(
       title: 'Epitrack',
       theme: ThemeData(
@@ -47,7 +46,7 @@ class EpitrackApp extends StatelessWidget {
     file.writeAsStringSync(jsonOutput);
   }
 
-  static void loadShowsFromJson() async {
+  static Future<bool> loadShowsFromJson() async {
     final dir = await getApplicationDocumentsDirectory();
     final path = dir.path;
     final fileName = 'shows.json';
@@ -64,6 +63,7 @@ class EpitrackApp extends StatelessWidget {
     }
 
     EpitrackApp.showsList = shows;
+    return true;  // Set the future data to true to signal loading complete
   }
 
 }
@@ -75,23 +75,48 @@ class ShowsScreen extends StatefulWidget {
 class _ShowsScreenState extends State<ShowsScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | Shows')),
-      body: _buildShowsList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => NewShowScreen()))
-            .then((_){
-              setState((){
-                //Updates ListView state
-              });
-            });
-        },
-        tooltip: 'New show',
-        child: Icon(Icons.add),
-        backgroundColor: Colors.green,
-      ),
+    return FutureBuilder<bool>(  // FutureBuilder waits for the shows to be loaded from the JSON file
+      future: EpitrackApp.loadShowsFromJson(),
+      builder: (BuildContext context, AsyncSnapshot<bool> snapshot){
+        if(snapshot.hasData){  // Shows properly loaded, show list
+          return Scaffold(
+            appBar: AppBar(title: Text('Epitrack | Shows')),
+            body: _buildShowsList(),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => NewShowScreen()))
+                  .then((_){
+                    setState((){
+                      //Updates ListView state
+                    });
+                  });
+              },
+              tooltip: 'New show',
+              child: Icon(Icons.add),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+        else{  // Shows not loaded yet, show temporary  loading screen
+          return Scaffold(
+            appBar: AppBar(title: Text('Epitrack | Shows')),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: Text('Loading saved shows...')
+                  )
+                ],
+              ))
+          );
+        }
+      }
     );
+    
   }
 
   Widget _buildShowsList() {
