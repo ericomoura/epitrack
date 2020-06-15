@@ -17,8 +17,8 @@ class EpitrackApp extends StatelessWidget {
     return MaterialApp(
       title: 'Epitrack',
       theme: ThemeData(
-        primaryColor: Colors.green,
-        canvasColor: Colors.green[100],
+        primaryColor: Constants.mainColor,
+        canvasColor: Constants.backgroundColor
       ),
       home: ShowsScreen(),
     );
@@ -93,7 +93,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
               },
               tooltip: 'New show',
               child: Icon(Icons.add),
-              backgroundColor: Colors.green,
+              backgroundColor: Constants.mainColor,
             ),
           );
         }
@@ -135,7 +135,12 @@ class _ShowsScreenState extends State<ShowsScreen> {
           return ListTile(
             title: Text(showName),
             onTap: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => ShowDetailsScreen(showName)));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ShowDetailsScreen(showName)))
+              .then((_){
+                setState((){
+                  // Updates list
+                });
+              });
             }
           );
         }
@@ -250,7 +255,21 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
 
   Widget _buildDetailsTab(){
     return Scaffold(
-      body: Text(_show.getName())
+      body: Column(
+        children: [
+          Text('Name: ' + _show.getName()),
+          Text('Number of seasons: ' + _show.getNumberOfSeasons().toString()),
+          Text('Number of episodes: ' + _show.getNumberOfEpisodes().toString()),
+          RaisedButton(
+            child: Text('Delete show'),
+            onPressed: (){
+              EpitrackApp.showsList.remove(_show);
+              EpitrackApp.saveShowsToJson();
+              Navigator.pop(context);
+            },
+          )
+        ]
+      )
     );
   }
 
@@ -260,7 +279,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
       floatingActionButton: FloatingActionButton(
         tooltip: 'New season',
         child: Icon(Icons.add),
-        backgroundColor: Colors.green,
+        backgroundColor: Constants.mainColor,
         onPressed: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => NewSeasonScreen(_show)))
             .then((_){
@@ -304,7 +323,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
       floatingActionButton: FloatingActionButton(
         tooltip: 'New episode',
         child: Icon(Icons.add),
-        backgroundColor: Colors.green,
+        backgroundColor: Constants.mainColor,
         onPressed: (){
           Navigator.push(context, MaterialPageRoute(builder: (context) => NewEpisodeScreen(_show)))
           .then((_){
@@ -331,13 +350,13 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
         if(_show.getEpisodes().isNotEmpty){
           ExpansionTile noSeasonTile = ExpansionTile(
             title: Text('No season'),
-            backgroundColor: Colors.green[200],
+            backgroundColor: Constants.highlightColor,
             children: _show.getEpisodes().map((episode){
               return ListTile(
                 title: Text(episode.toString()),
                 trailing: IconButton(
                   icon: Icon(episode.getWatched() ? Icons.check_circle : Icons.check_circle_outline),
-                  color: episode.getWatched() ? Colors.green : null,
+                  color: episode.getWatched() ? Constants.mainColor : null,
                   onPressed: (){
                     setState((){
                       episode.setWatched(!episode.getWatched());  // Toggles watched
@@ -353,13 +372,13 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
         for(Season season in _show.getSeasons()){
           ExpansionTile seasonTile = ExpansionTile(
             title: Text(season.toString()),
-            backgroundColor: Colors.green[200],
+            backgroundColor: Constants.highlightColor,
             children: season.getEpisodes().map((episode){
               return ListTile(
                 title: Text('S'+season.getNumber().toString()+episode.toString()),
                 trailing: IconButton(
                   icon: Icon(episode.getWatched() ? Icons.check_circle : Icons.check_circle_outline),
-                  color: episode.getWatched() ? Colors.green : null,
+                  color: episode.getWatched() ? Constants.mainColor : null,
                   onPressed: (){
                     setState((){
                       episode.setWatched(!episode.getWatched());  // Toggles watched
@@ -601,6 +620,19 @@ class Show {
     });
   }
 
+  // Returns the number of seasons the show has
+  int getNumberOfSeasons(){
+    return this.seasons.length;
+  }
+  // Returns the total number of episodes (show itself and each season)
+  int getNumberOfEpisodes(){
+    int totalNumber = this.episodes.length;
+    for(Season season in this.seasons){
+      totalNumber += season.getEpisodes().length;
+    }
+
+    return totalNumber;
+  }
 
   @override
   String toString() => this.name;
@@ -608,19 +640,6 @@ class Show {
   factory Show.fromJson(Map<String, dynamic> json) => _$ShowFromJson(json);
   Map<String, dynamic> toJson() => _$ShowToJson(this);
 
-  /*DEBUG json
-  // JSON
-  Show.fromJson (Map<String, dynamic> json)
-    : _name = json['name'],
-      _seasons = json['seasons'],
-      _episodes = json['episodes'];
-
-  Map<String, dynamic> toJson() =>
-    {
-      'name': _name,
-      'seasons': _seasons,
-      'episodes': _episodes
-    };*/
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -724,10 +743,16 @@ class Episode{
 }
 
 class Constants{
+  // Episode types
   static const EPISODETYPES = {
     'Episode' : 'E',
     'Movie' : 'M',
     'Special' : 'SP',
     'OVA' : 'OVA'
   };
+  
+  // Colors
+  static const Color mainColor = Colors.green;
+  static const Color backgroundColor = Color(4291356361);  // Same as Colors.green[100]
+  static const Color highlightColor = Color(4289058471);  // Same as Colors.green[200]
 }
