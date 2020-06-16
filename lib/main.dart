@@ -254,8 +254,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
   }
 
   Widget _buildDetailsTab(){
-    return Scaffold(
-      body: Column(
+    return Column(
         children: [
           Text('Name: ' + _show.getName()),
           Text('Number of seasons: ' + _show.getNumberOfSeasons().toString()),
@@ -269,8 +268,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
             },
           )
         ]
-      )
-    );
+      );
   }
 
   Widget _buildSeasonsTab(){
@@ -306,7 +304,15 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           Season _season = _show.getSeasons()[seasonIndex];
 
           return ListTile(
-            title: Text(_season.toString())
+            title: Text(_season.toString()),
+            onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => SeasonDetailsScreen(_season, _show)))
+                .then((_){
+                  setState((){
+                    // Update list
+                  });
+                });
+              }
           );
         }
         else{
@@ -459,6 +465,45 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
       );
   }
 
+}
+
+class SeasonDetailsScreen extends StatefulWidget{
+  final Season _season;
+  final Show _show;
+
+  // Constructor
+  SeasonDetailsScreen(this._season, this._show);
+
+  @override
+  _SeasonDetailsScreenState createState() => _SeasonDetailsScreenState(this._season, this._show);
+}
+class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
+  Season _season;
+  Show _show;
+
+  _SeasonDetailsScreenState(this._season, this._show);
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text('Epitrack | $_show')),
+      body: Column(
+        children: [
+          Text('Season name: ' + _season.getName()),
+          Text('Season number: ' + _season.getNumber().toString()),
+          Text('Number of episodes: ' + _season.getNumberOfEpisodes().toString()),
+          RaisedButton(
+            child: Text('Delete season'),
+            onPressed: (){
+              _show.getSeasons().remove(_season);
+              EpitrackApp.saveShowsToJson();
+              Navigator.pop(context);
+            },
+          )
+        ]
+     )
+    );
+  }
 }
 
 class NewEpisodeScreen extends StatefulWidget{
@@ -671,6 +716,11 @@ class Season{
     }
 
     this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
+  }
+
+  // Returns the total number of episodes in the season
+  int getNumberOfEpisodes(){
+    return this.episodes.length;
   }
 
   // Prints number of season and name if it has one (e.g. S01: Season Name)
