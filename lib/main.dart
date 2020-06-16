@@ -306,13 +306,13 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           return ListTile(
             title: Text(_season.toString()),
             onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => SeasonDetailsScreen(_season, _show)))
-                .then((_){
-                  setState((){
-                    // Update list
-                  });
+              Navigator.push(context, MaterialPageRoute(builder: (context) => SeasonDetailsScreen(_season, _show)))
+              .then((_){
+                setState((){
+                  // Update list
                 });
-              }
+              });
+            }
           );
         }
         else{
@@ -368,7 +368,15 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                       episode.setWatched(!episode.getWatched());  // Toggles watched
                     });
                   }
-                )
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode, null, _show)))
+                  .then((_){
+                    setState((){
+                      // Update list
+                    });
+                  });
+                }
               );
             }).toList().expand((element) => [element, Divider(thickness: 0.75)]).toList()
           );
@@ -390,7 +398,15 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                       episode.setWatched(!episode.getWatched());  // Toggles watched
                     });
                   }
-                )
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode, season, _show)))
+                  .then((_){
+                    setState((){
+                      // Update list
+                    });
+                  });
+                }
               );
             }).toList().expand((element) => [element, Divider(thickness: 0.75)]).toList()
           );
@@ -601,6 +617,54 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             },
           )
         ]
+      )
+    );
+  }
+}
+
+class EpisodeDetailsScreen extends StatefulWidget{
+  final Episode _episode;
+  final Season _season;
+  final Show _show;
+
+  // Constructor
+  EpisodeDetailsScreen(this._episode, this._season, this._show);
+
+  @override
+  _EpisodeDetailsScreenState createState() => _EpisodeDetailsScreenState(this._episode, this._season, this._show);
+}
+class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
+  Episode _episode;
+  Season _season;
+  Show _show;
+
+  _EpisodeDetailsScreenState(this._episode, this._season, this._show);
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text('Epitrack | $_show')),
+      body: Column(
+        children: [
+          Text('Episode name: ' + _episode.getName()),
+          Text('Episode number: ' + _episode.getNumber().toString()),
+          Text('Episode type: ' + _episode.getType()),
+          Text('Watched: ' + _episode.watched.toString()),
+          RaisedButton(
+            child: Text('Delete episode'),
+            onPressed: (){
+              if(_season == null){  // Episode has no season, remove from show's list
+                _show.getEpisodes().remove(_episode);
+              }
+              else{  // Episode has a season, remove from season's list
+                _season.getEpisodes().remove(_episode);
+              }
+
+              EpitrackApp.saveShowsToJson();
+              Navigator.pop(context);
+            },
+          )
+        ],
       )
     );
   }
