@@ -502,7 +502,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | $_show')),
+      appBar: AppBar(title: Text('Epitrack | S' + _season.getNumber().toString() + ' $_show')),
       body: Column(
         children: [
           Text('Season name: ' + _season.getName()),
@@ -643,7 +643,9 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | $_show')),
+      appBar: AppBar(title: _season == null ?   // Remove season number from appbar if there is no season
+                        Text('Epitrack | E' + _episode.getNumber().toString() + ' $_show')
+                      : Text('Epitrack | S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' $_show')),
       body: Column(
         children: [
           Text('Episode name: ' + _episode.getName()),
