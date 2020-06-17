@@ -18,7 +18,8 @@ class EpitrackApp extends StatelessWidget {
       title: 'Epitrack',
       theme: ThemeData(
         primaryColor: Constants.mainColor,
-        canvasColor: Constants.backgroundColor
+        canvasColor: Constants.backgroundColor,
+        accentColor: Constants.mainColor
       ),
       home: ShowsScreen(),
     );
@@ -366,6 +367,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                   onPressed: (){
                     setState((){
                       episode.setWatched(!episode.getWatched());  // Toggles watched
+                      EpitrackApp.saveShowsToJson();
                     });
                   }
                 ),
@@ -539,8 +541,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   List<Season> _seasons = List<Season>();  // All seasons, including "no season"
     Season _selectedSeason;  // Season currently selected in the dropdown menu
     String _selectedType;  // Episode type currently selected in the dropdown menu
-    DateTime _selectedDate;  //Date currently selected
-    TimeOfDay _selectedTime;  //Time currently selected
+    DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
 
   // Constructor
   _NewEpisodeScreenState(Show show){
@@ -596,25 +597,28 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             }).toList()
           ),
           Row(children: [  // Airing date
-            Text('Airing date: ${_selectedDate.toString().split(' ')[0]}'),
+            Text('Airing date: ${_selectedDateAndTime.getDateString()}'),
             RaisedButton(
               child: Text('Select date'),
               onPressed: () async{
                 DateTime _date = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(-5000), lastDate: DateTime(5000));
                 setState((){
-                  _selectedDate = _date;
+                  _selectedDateAndTime.setYear(_date.year);
+                  _selectedDateAndTime.setMonth(_date.month);
+                  _selectedDateAndTime.setDay(_date.day);
                 });
               },
             )
           ],),
           Row(children: [  // Airing time
-            Text('Airing time: ${_selectedTime.toString()}'),
+            Text('Airing time: ${_selectedDateAndTime.getTimeString()}'),
             RaisedButton(
               child: Text('Select time'),
               onPressed: () async{
                 TimeOfDay _time = await showTimePicker(context: context, initialTime: TimeOfDay(hour: 0, minute: 0));
                 setState((){
-                  _selectedTime = _time;
+                  _selectedDateAndTime.setHour(_time.hour);
+                  _selectedDateAndTime.setMinute(_time.minute);
                 });
               },
             )
@@ -634,8 +638,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                 _show.addEpisode(name: _newEpisodeName, 
                                 season: _selectedSeason, 
                                 type: _selectedType == null ? Constants.EPISODETYPES['Episode'] : _selectedType,  // Defaults to type 'Episode'
-                                airingDate: _selectedDate,
-                                airingTime: _selectedTime);
+                                airingDateAndTime: _selectedDateAndTime
+                                );
                 EpitrackApp.saveShowsToJson();  // Saves to persistent storage
                 Navigator.pop(context);
               }
@@ -682,8 +686,8 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
           Text('Episode type: ' + _episode.getType()),
           Text('Watched: ' + _episode.watched.toString()),
           Text('Aired on: '
-              + (_episode.getAiringDate() == null ? '-' : _episode.getAiringDate().toString().split(' ')[0])
-              + (_episode.getAiringTime() == null ? '' : ' at ' + _episode.getAiringTime().format(context))),
+              + (_episode.getAiringDateAndTime().getYear() == null ? '-' : _episode.getAiringDateAndTime().getDateString())
+              + (_episode.getAiringDateAndTime().getHour()== null ? '' : ' at ' + _episode.getAiringDateAndTime().getTimeString())),
           RaisedButton(
             child: Text('Delete episode'),
             onPressed: (){
@@ -720,7 +724,7 @@ class Show {
   // Returns list of episodes
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
-  void addEpisode({String name="", Season season, String type, DateTime airingDate, TimeOfDay airingTime}){
+  void addEpisode({String name="", Season season, String type, DateAndTime airingDateAndTime}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int _nextEpisodeNumber;
       Iterable<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} );
@@ -732,10 +736,10 @@ class Show {
         _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
       }
 
-      this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type, airingDate: airingDate, airingTime: airingTime));
+      this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type, airingDateAndTime: airingDateAndTime));
     }
     else{  // Calls the season's addEpisode() function
-      season.addEpisode(name: name, type: type);
+      season.addEpisode(name: name, type: type, airingDateAndTime: airingDateAndTime);
     }
 
     
@@ -802,7 +806,7 @@ class Season{
   // Returns list of episodes
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate season number
-  void addEpisode({String name="", String type='E'}){
+  void addEpisode({String name="", String type='E', DateAndTime airingDateAndTime}){
     int _nextEpisodeNumber;
     List<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} ).toList();
     
@@ -813,7 +817,7 @@ class Season{
       _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
     }
 
-    this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
+    this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type, airingDateAndTime: airingDateAndTime));
   }
 
   // Returns the total number of episodes in the season
@@ -848,16 +852,14 @@ class Episode{
   String name;
   String type;
   bool watched;
-  DateTime airingDate;
-  TimeOfDay airingTime;
+  DateAndTime airingDateAndTime;
 
-  Episode(int number, {String name="", String type, DateTime airingDate, TimeOfDay airingTime}){
+  Episode(int number, {String name="", String type, DateAndTime airingDateAndTime}){
     this.number = number;
     this.name = name;
     type == null ? this.type = Constants.EPISODETYPES['Episode'] : this.type = type;
     this.watched = false;
-    this.airingDate = airingDate;
-    this.airingTime = airingTime;
+    this.airingDateAndTime = airingDateAndTime;
   }
 
 
@@ -873,11 +875,8 @@ class Episode{
   String getName() => this.name;
   void setName(String name) => this.name = name;
 
-  DateTime getAiringDate() => this.airingDate;
-  void setAiringDate(DateTime newDate) => this.airingDate = newDate;
-
-  TimeOfDay getAiringTime() => this.airingTime;
-  void setAiringTime(TimeOfDay newTime) => this.airingTime = newTime;
+  DateAndTime getAiringDateAndTime() => this.airingDateAndTime;
+  void setAiringDateAndTime(DateAndTime newDateAndTime) => this.airingDateAndTime = newDateAndTime;
 
   String toString() => this.name.isEmpty ? this.type+this.number.toString() : this.type+this.number.toString()+': '+this.name;
 
@@ -885,6 +884,43 @@ class Episode{
   factory Episode.fromJson(Map<String, dynamic> json) => _$EpisodeFromJson(json);
   Map<String, dynamic> toJson() => _$EpisodeToJson(this);
 
+}
+
+// Custom class for time and date that supports JSON encoding/decoding
+@JsonSerializable(explicitToJson: true)
+class DateAndTime {
+  int year, month, day;
+  int hour, minute;
+
+  DateAndTime({this.year, this.month, this.day, this.hour, this.minute});
+
+  int getYear() => this.year;
+  void setYear(int newYear) => this.year = newYear;
+
+  int getMonth() => this.month;
+  void setMonth(int newMonth) => this.month = newMonth;
+
+  int getDay() => this.day;
+  void setDay(int newDay) => this.day = newDay;
+
+  int getHour() => this.hour;
+  void setHour(int newHour) => this.hour = newHour;
+
+  int getMinute() => this.minute;
+  void setMinute(int newMinute) => this.minute = newMinute;
+
+  String getDateString() => '${this.year}-${this.month}-${this.day}';
+  String getTimeString() => '${this.hour}:${this.minute}';
+
+  DateTime getDateTimeObject() => DateTime(this.year, this.month, this.day, this.hour, this.minute);
+  TimeOfDay getTimeOfDayObject() => TimeOfDay(hour: this.hour, minute: this.minute);
+
+  String toString(){
+    return '${this.year}-${this.month}-${this.day}, ${this.hour}:${this.minute}';
+  }
+
+  factory DateAndTime.fromJson(Map<String, dynamic> json) => _$DateAndTimeFromJson(json);
+  Map<String, dynamic> toJson() => _$DateAndTimeToJson(this);
 }
 
 class Constants{
@@ -896,8 +932,25 @@ class Constants{
     'OVA' : 'OVA'
   };
   
+  // Theme
+  static const Color mainColor = bluegrey;
+  static const Color backgroundColor = bluegreyBackground;
+  static const Color highlightColor = bluegreyHighlight;
+
   // Colors
-  static const Color mainColor = Colors.green;
-  static const Color backgroundColor = Color(4291356361);  // Same as Colors.green[100]
-  static const Color highlightColor = Color(4289058471);  // Same as Colors.green[200]
+  static const Color red = Colors.red;  // red
+  static const Color redBackground = Color(4294954450);  // red[100]
+  static const Color redHighlight = Color(4293892762);  // red[200]
+  static const Color green = Colors.green;  // green
+  static const Color greenBackground = Color(4291356361);  // green[100]
+  static const Color greenHighlight = Color(4289058471);  // green[200]
+  static const Color blue = Colors.blue;  // blue
+  static const Color blueBackground = Color(4290502395);  // blue[100]
+  static const Color blueHighlight = Color(4287679225);  // blue[200]
+  static const Color grey = Colors.grey;  // grey
+  static const Color greyBackground = Color(4294309365);  // grey[100]
+  static const Color greyHighlight = Color(4293848814);  // grey[200]
+  static const Color bluegrey = Colors.blueGrey;  // bluegrey
+  static const Color bluegreyBackground = Color(4291811548);  // bluegrey[100]
+  static const Color bluegreyHighlight = Color(4289773253);  // bluegrey[200]
 }

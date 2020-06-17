@@ -47,6 +47,10 @@ Episode _$EpisodeFromJson(Map<String, dynamic> json) {
     json['number'] as int,
     name: json['name'] as String,
     type: json['type'] as String,
+    airingDateAndTime: json['airingDateAndTime'] == null
+        ? null
+        : DateAndTime.fromJson(
+            json['airingDateAndTime'] as Map<String, dynamic>),
   )..watched = json['watched'] as bool;
 }
 
@@ -55,4 +59,24 @@ Map<String, dynamic> _$EpisodeToJson(Episode instance) => <String, dynamic>{
       'name': instance.name,
       'type': instance.type,
       'watched': instance.watched,
+      'airingDateAndTime': instance.airingDateAndTime?.toJson(),
+    };
+
+DateAndTime _$DateAndTimeFromJson(Map<String, dynamic> json) {
+  return DateAndTime(
+    year: json['year'] as int,
+    month: json['month'] as int,
+    day: json['day'] as int,
+    hour: json['hour'] as int,
+    minute: json['minute'] as int,
+  );
+}
+
+Map<String, dynamic> _$DateAndTimeToJson(DateAndTime instance) =>
+    <String, dynamic>{
+      'year': instance.year,
+      'month': instance.month,
+      'day': instance.day,
+      'hour': instance.hour,
+      'minute': instance.minute,
     };
