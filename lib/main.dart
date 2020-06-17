@@ -537,8 +537,10 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   String _newEpisodeName;
 
   List<Season> _seasons = List<Season>();  // All seasons, including "no season"
-  Season _selectedSeason;  // Season currently selected in the dropdown menu
-  String _selectedType;  // Episode type currently selected in the dropdown menu
+    Season _selectedSeason;  // Season currently selected in the dropdown menu
+    String _selectedType;  // Episode type currently selected in the dropdown menu
+    DateTime _selectedDate;  //Date currently selected
+    TimeOfDay _selectedTime;  //Time currently selected
 
   // Constructor
   _NewEpisodeScreenState(Show show){
@@ -593,6 +595,30 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
               );
             }).toList()
           ),
+          Row(children: [  // Airing date
+            Text('Airing date: ${_selectedDate.toString().split(' ')[0]}'),
+            RaisedButton(
+              child: Text('Select date'),
+              onPressed: () async{
+                DateTime _date = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(-5000), lastDate: DateTime(5000));
+                setState((){
+                  _selectedDate = _date;
+                });
+              },
+            )
+          ],),
+          Row(children: [  // Airing time
+            Text('Airing time: ${_selectedTime.toString()}'),
+            RaisedButton(
+              child: Text('Select time'),
+              onPressed: () async{
+                TimeOfDay _time = await showTimePicker(context: context, initialTime: TimeOfDay(hour: 0, minute: 0));
+                setState((){
+                  _selectedTime = _time;
+                });
+              },
+            )
+          ],),
           TextFormField(  // Episode name text box
             decoration: InputDecoration(labelText: 'Name'),
             onSaved: (String value){
@@ -607,7 +633,9 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
 
                 _show.addEpisode(name: _newEpisodeName, 
                                 season: _selectedSeason, 
-                                type: _selectedType == null ? Constants.EPISODETYPES['Episode'] : _selectedType);  // Defaults to type 'Episode'
+                                type: _selectedType == null ? Constants.EPISODETYPES['Episode'] : _selectedType,  // Defaults to type 'Episode'
+                                airingDate: _selectedDate,
+                                airingTime: _selectedTime);
                 EpitrackApp.saveShowsToJson();  // Saves to persistent storage
                 Navigator.pop(context);
               }
@@ -620,6 +648,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
       )
     );
   }
+
 }
 
 class EpisodeDetailsScreen extends StatefulWidget{
@@ -652,6 +681,9 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
           Text('Episode number: ' + _episode.getNumber().toString()),
           Text('Episode type: ' + _episode.getType()),
           Text('Watched: ' + _episode.watched.toString()),
+          Text('Aired on: '
+              + (_episode.getAiringDate() == null ? '-' : _episode.getAiringDate().toString().split(' ')[0])
+              + (_episode.getAiringTime() == null ? '' : ' at ' + _episode.getAiringTime().format(context))),
           RaisedButton(
             child: Text('Delete episode'),
             onPressed: (){
@@ -688,7 +720,7 @@ class Show {
   // Returns list of episodes
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
-  void addEpisode({String name="", Season season, String type}){
+  void addEpisode({String name="", Season season, String type, DateTime airingDate, TimeOfDay airingTime}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int _nextEpisodeNumber;
       Iterable<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} );
@@ -700,7 +732,7 @@ class Show {
         _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
       }
 
-      this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type));
+      this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type, airingDate: airingDate, airingTime: airingTime));
     }
     else{  // Calls the season's addEpisode() function
       season.addEpisode(name: name, type: type);
@@ -816,12 +848,16 @@ class Episode{
   String name;
   String type;
   bool watched;
+  DateTime airingDate;
+  TimeOfDay airingTime;
 
-  Episode(int number, {String name="", String type}){
+  Episode(int number, {String name="", String type, DateTime airingDate, TimeOfDay airingTime}){
     this.number = number;
     this.name = name;
     type == null ? this.type = Constants.EPISODETYPES['Episode'] : this.type = type;
     this.watched = false;
+    this.airingDate = airingDate;
+    this.airingTime = airingTime;
   }
 
 
@@ -837,25 +873,18 @@ class Episode{
   String getName() => this.name;
   void setName(String name) => this.name = name;
 
+  DateTime getAiringDate() => this.airingDate;
+  void setAiringDate(DateTime newDate) => this.airingDate = newDate;
+
+  TimeOfDay getAiringTime() => this.airingTime;
+  void setAiringTime(TimeOfDay newTime) => this.airingTime = newTime;
+
   String toString() => this.name.isEmpty ? this.type+this.number.toString() : this.type+this.number.toString()+': '+this.name;
 
 
   factory Episode.fromJson(Map<String, dynamic> json) => _$EpisodeFromJson(json);
   Map<String, dynamic> toJson() => _$EpisodeToJson(this);
-  /*DEBUG json
-  // JSON
-  Episode.fromJson(Map<String, dynamic> json)
-    : _number = json['number'],
-      _name = json['name'],
-      _type = json['type'],
-      _watched = json['watched'];
-  Map<String, dynamic> toJson() =>
-    {
-      'number': _number,
-      'name': _name,
-      'type': _type,
-      'watched': _watched
-    };*/
+
 }
 
 class Constants{
