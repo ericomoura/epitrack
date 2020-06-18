@@ -188,6 +188,7 @@ class _NewShowScreenState extends State<NewShowScreen> {
               },
             ),
             RaisedButton(
+              color: Constants.highlightColor,
               child: Text('Add'),
               onPressed: () {
                 if (_formKey.currentState.validate()) {
@@ -261,6 +262,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           Text('Number of seasons: ' + _show.getNumberOfSeasons().toString()),
           Text('Number of episodes: ' + _show.getNumberOfEpisodes().toString()),
           RaisedButton(
+            color: Constants.highlightColor,
             child: Text('Delete show'),
             onPressed: (){
               EpitrackApp.showsList.remove(_show);
@@ -466,6 +468,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
               },
             ),
             RaisedButton(
+              color: Constants.highlightColor,
               child: Text('Add'),
               onPressed: () {
                 if (_formKey.currentState.validate()) {  // Form is okay, add season
@@ -511,6 +514,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
           Text('Season number: ' + _season.getNumber().toString()),
           Text('Number of episodes: ' + _season.getNumberOfEpisodes().toString()),
           RaisedButton(
+            color: Constants.highlightColor,
             child: Text('Delete season'),
             onPressed: (){
               _show.getSeasons().remove(_season);
@@ -564,41 +568,57 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   Widget _buildNewEpisodeForm(){
     return Form(
       key: _formKey,
-      child: Column(
+      child: SingleChildScrollView(child: Column(
         children: <Widget>[
-          DropdownButton(  // Season dropdown
-            hint: Text('Select a season'),
-            value: _selectedSeason,
-            onChanged: (newValue){
-              setState((){
-                _selectedSeason = newValue;
-              });
-            },
-            items: _seasons.map((season){
-              return DropdownMenuItem(
-                child: new Text(season.getNumber() == 0 ? season.getName() : season.toString()),  // Returns only name for season 0 (no season)
-                value: season
-              );
-            }).toList()
-          ),
-          DropdownButton(  // Episode type dropdown
-            hint: Text('Select an episode type'),
-            value: _selectedType,
-            onChanged: (newValue){
-              setState((){
-                _selectedType = newValue;
-              });
-            },
-            items: Constants.EPISODETYPES.keys.map((type){
-              return DropdownMenuItem(
-                child: new Text(type),
-                value: Constants.EPISODETYPES[type]
-              );
-            }).toList()
-          ),
+          Row(children: [  // Episode name
+            Text('Name: '),
+            Container(width: 300, child: TextFormField(  // Episode name text box
+              decoration: InputDecoration(labelText: 'Name'),           
+              onSaved: (String value){
+                _newEpisodeName = value;
+              },
+            ))
+          ]), 
+          Row(children: [  // Season
+            Text('Season: '),
+            DropdownButton(  // Season dropdown
+              hint: Text('Select a season'),
+              value: _selectedSeason,
+              onChanged: (newValue){
+                setState((){
+                  _selectedSeason = newValue;
+                });
+              },
+              items: _seasons.map((season){
+                return DropdownMenuItem(
+                  child: new Text(season.getNumber() == 0 ? season.getName() : season.toString()),  // Returns only name for season 0 (no season)
+                  value: season
+                );
+              }).toList()
+            ),
+          ]),
+          Row(children: [  // Episode type
+            Text('Type: '),
+            DropdownButton(  // Episode type dropdown
+              hint: Text('Select an episode type'),
+              value: _selectedType,
+              onChanged: (newValue){
+                setState((){
+                  _selectedType = newValue;
+                });
+              },
+              items: Constants.EPISODETYPES.keys.map((type){
+                return DropdownMenuItem(
+                  child: new Text(type),
+                  value: Constants.EPISODETYPES[type]
+                );
+              }).toList()
+            ),
+          ]),       
           Row(children: [  // Airing date
-            Text('Airing date: ${_selectedDateAndTime.getDateString()}'),
+            Text(_selectedDateAndTime.getYear() == null ? 'Airing date: - ' : 'Airing date: ${_selectedDateAndTime.getDateString()}'),
             RaisedButton(
+              color: Constants.highlightColor,
               child: Text('Select date'),
               onPressed: () async{
                 DateTime _date = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(-5000), lastDate: DateTime(5000));
@@ -611,8 +631,9 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             )
           ],),
           Row(children: [  // Airing time
-            Text('Airing time: ${_selectedDateAndTime.getTimeString()}'),
+            Text(_selectedDateAndTime.getHour() == null ? 'Airing time: - ' : 'Airing time: ${_selectedDateAndTime.getTimeString()}'),
             RaisedButton(
+              color: Constants.highlightColor,
               child: Text('Select time'),
               onPressed: () async{
                 TimeOfDay _time = await showTimePicker(context: context, initialTime: TimeOfDay(hour: 0, minute: 0));
@@ -623,14 +644,9 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
               },
             )
           ],),
-          TextFormField(  // Episode name text box
-            decoration: InputDecoration(labelText: 'Name'),
-            onSaved: (String value){
-              _newEpisodeName = value;
-            },
-          ),
           RaisedButton(  // Submit button
-            child: Text('Add'),
+            color: Constants.highlightColor,
+            child: Text('Add episode'),
             onPressed: (){
               if(_formKey.currentState.validate()){  // Form is okay, add episode
                 _formKey.currentState.save();
@@ -650,7 +666,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           )
         ]
       )
-    );
+    ));
   }
 
 }
@@ -681,14 +697,15 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
                       : Text('Epitrack | S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' $_show')),
       body: Column(
         children: [
-          Text('Episode name: ' + _episode.getName()),
-          Text('Episode number: ' + _episode.getNumber().toString()),
-          Text('Episode type: ' + _episode.getType()),
+          Text('Name: ' + _episode.getName()),
+          Text('Number: ' + _episode.getNumber().toString()),
+          Text('Type: ' + Constants.EPISODETYPES.keys.singleWhere((key) => Constants.EPISODETYPES[key] == _episode.getType()) ),
           Text('Watched: ' + _episode.watched.toString()),
           Text('Aired on: '
               + (_episode.getAiringDateAndTime().getYear() == null ? '-' : _episode.getAiringDateAndTime().getDateString())
               + (_episode.getAiringDateAndTime().getHour()== null ? '' : ' at ' + _episode.getAiringDateAndTime().getTimeString())),
           RaisedButton(
+            color: Constants.highlightColor,
             child: Text('Delete episode'),
             onPressed: (){
               if(_season == null){  // Episode has no season, remove from show's list
@@ -909,14 +926,14 @@ class DateAndTime {
   int getMinute() => this.minute;
   void setMinute(int newMinute) => this.minute = newMinute;
 
-  String getDateString() => '${this.year}-${this.month}-${this.day}';
-  String getTimeString() => '${this.hour}:${this.minute}';
+  String getDateString() => '${Utils.padLeadingZeros(this.year, 4)}-${Utils.padLeadingZeros(this.month, 2)}-${Utils.padLeadingZeros(this.day, 2)}';
+  String getTimeString() => '${Utils.padLeadingZeros(this.hour, 2)}:${Utils.padLeadingZeros(this.minute, 2)}';
 
   DateTime getDateTimeObject() => DateTime(this.year, this.month, this.day, this.hour, this.minute);
   TimeOfDay getTimeOfDayObject() => TimeOfDay(hour: this.hour, minute: this.minute);
 
   String toString(){
-    return '${this.year}-${this.month}-${this.day}, ${this.hour}:${this.minute}';
+    return '${Utils.padLeadingZeros(this.year, 4)}-${Utils.padLeadingZeros(this.month, 2)}-${Utils.padLeadingZeros(this.day, 2)}, ${Utils.padLeadingZeros(this.hour, 2)}:${Utils.padLeadingZeros(this.minute, 2)}';
   }
 
   factory DateAndTime.fromJson(Map<String, dynamic> json) => _$DateAndTimeFromJson(json);
@@ -933,9 +950,9 @@ class Constants{
   };
   
   // Theme
-  static const Color mainColor = bluegrey;
-  static const Color backgroundColor = bluegreyBackground;
-  static const Color highlightColor = bluegreyHighlight;
+  static const Color mainColor = blue;
+  static const Color backgroundColor = blueBackground;
+  static const Color highlightColor = blueHighlight;
 
   // Colors
   static const Color red = Colors.red;  // red
@@ -953,4 +970,23 @@ class Constants{
   static const Color bluegrey = Colors.blueGrey;  // bluegrey
   static const Color bluegreyBackground = Color(4291811548);  // bluegrey[100]
   static const Color bluegreyHighlight = Color(4289773253);  // bluegrey[200]
+
+}
+
+class Utils{
+  // Adds zeros to the left of a number until it reaches 'numberOfDigits'. Doesn't add anything if it already has at least 'numberOfDigits' digits.
+  static String padLeadingZeros(var input, int numberOfDigits){
+    var num = input;
+    int inputDigits = 0;
+    int zerosToAdd = 0;
+
+    // Counts number of digits on the input number
+    while(num >= 1){
+      inputDigits += 1;
+      num ~/= 10;
+    }
+
+    zerosToAdd = numberOfDigits - inputDigits;
+    return '0'*zerosToAdd + input.toString();
+  }
 }
