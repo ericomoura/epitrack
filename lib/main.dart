@@ -666,7 +666,9 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
               keyboardType: TextInputType.number,
               inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
               onSaved: (String value){
-                _newEpisodeDuration = double.parse(value);
+                if(value != ''){
+                  _newEpisodeDuration = double.parse(value);
+                }
               }
             ))
           ]),
@@ -1012,6 +1014,11 @@ class Utils{
     var num = input;
     int inputDigits = 0;
     int zerosToAdd = 0;
+
+    // Special case for numbers with zero before the decimal separator
+    if(input >= 0 && input < 1){
+      return '0' + input.toString();
+    }
 
     // Counts number of digits on the input number
     while(num >= 1){
