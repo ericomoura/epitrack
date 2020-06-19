@@ -509,7 +509,6 @@ class SeasonDetailsScreen extends StatefulWidget{
   final Season _season;
   final Show _show;
 
-  // Constructor
   SeasonDetailsScreen(this._season, this._show);
 
   @override
@@ -524,7 +523,20 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | S' + _season.getNumber().toString() + ' $_show')),
+      appBar: AppBar(title: Text('Epitrack | S' + _season.getNumber().toString() + ' of $_show')),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Edit season',
+        child: Icon(Icons.edit),
+        backgroundColor: Constants.mainColor,
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => EditSeasonScreen(this._season, this._show)))
+            .then((_){
+              setState((){
+                //Updates details
+              });
+            });
+        },
+      ),
       body: Column(
         children: [
           Text('Season name: ' + _season.getName()),
@@ -541,6 +553,67 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
           )
         ]
      )
+    );
+  }
+}
+
+class EditSeasonScreen extends StatefulWidget{
+  final Season _season;
+  final Show  _show;
+
+  EditSeasonScreen(this._season, this._show);
+
+  @override
+  _EditSeasonScreenState createState() => _EditSeasonScreenState(this._season, this._show);
+}
+class _EditSeasonScreenState extends State<EditSeasonScreen>{
+  final Season _season;
+  final Show _show;
+
+  final _formKey = GlobalKey<FormState>();
+  String _seasonName;
+
+  _EditSeasonScreenState(this._season, this._show){
+    this._seasonName = this._season.getName();
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text('Epitrack | Editing S' + _season.getNumber().toString() + ' of $_show')),
+      body: _buildEditSeasonForm()
+    );
+  }
+
+  Widget _buildEditSeasonForm(){
+    return Form(
+      key: this._formKey,
+      child: Column(
+        children: <Widget>[
+          TextFormField(
+            initialValue: this._season.getName(),
+            onSaved: (String value) {
+              this._seasonName = value;
+            },
+          ),
+          RaisedButton(
+            color: Constants.highlightColor,
+            child: Text('Save changes'),
+            onPressed: () {
+              if (this._formKey.currentState.validate()) {  // Form is okay, add season
+                this._formKey.currentState.save();
+                this._season.setName(this._seasonName);
+
+                EpitrackApp.saveShowsToJson();
+                Navigator.pop(context);
+              } 
+              else {  // Form isn't okay
+                print('Error adding season!');
+              }
+            },
+          )
+        ]
+      )
     );
   }
 }
