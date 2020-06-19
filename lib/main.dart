@@ -910,7 +910,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
           Row(children: [  // Duration
             Text('Duration: '),
             Container(width: 100, child: TextFormField(
-              initialValue: _episodeDuration.toString(),
+              initialValue: _episodeDuration == null ? '' : _episodeDuration.toString(),
               keyboardType: TextInputType.number,
               inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
               onSaved: (String value){
@@ -928,11 +928,14 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
               if(_formKey.currentState.validate()){  // Form is okay, add episode
                 _formKey.currentState.save();
 
-                if(_selectedSeason == _season){  // Same season, just update values
+                if(_selectedSeason == this._season || (_selectedSeason.getName() == 'No season' && this._season == null)){  // Same season, just update values
                   _episode.setName(_episodeName);
                   _episode.setType(_selectedType);
                   _episode.setAiringDateAndTime(_selectedDateAndTime);
                   _episode.setDuration(_episodeDuration);
+
+                  EpitrackApp.saveShowsToJson();
+                  Navigator.pop(context);
                 }
                 else{   // Different season, remove from the current one and readd to the new one
                   
@@ -944,19 +947,20 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                     _season.getEpisodes().remove(this._episode);
                   }
 
-                  // Readd the episode with the new changes
+                  // Readds the episode with the new changes
                   _show.addEpisode(
                     name: _episodeName, 
                     season: _selectedSeason, 
                     type: _selectedType == null ? Constants.EPISODETYPES['Episode'] : _selectedType,  // Defaults to type 'Episode'
-                    watched: _episode.getWatched(),
+                    watched: this._episode.getWatched(),
                     airingDateAndTime: _selectedDateAndTime,
                     durationMinutes: _episodeDuration
                   );
-                }
 
-                EpitrackApp.saveShowsToJson();  // Saves to persistent storage
-                Navigator.pop(context);
+                  EpitrackApp.saveShowsToJson();
+                  Navigator.pop(context);
+                  Navigator.pop(context);  // Closes the episode details screen too since it now refers to a removed Episode object
+                }
               }
               else{  // Form isn't okay
                 print('Error adding episode!');
