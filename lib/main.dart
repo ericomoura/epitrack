@@ -26,55 +26,6 @@ class EpitrackApp extends StatelessWidget {
     );
   }
 
-  //Returns a Show object with the given name
-  static Show getShowByName(String name){
-    return showsList.singleWhere((element){
-      return element.name == name;
-    });
-  }
-
-  static void saveShowsToJson() async {
-    print('Saving JSON...');
-    final dir = await getApplicationDocumentsDirectory();
-    final path = dir.path;
-    final fileName = 'shows.json';
-    File file = File('$path/$fileName');
-
-    // Encodes each show individually and separates them with \n
-    String  jsonOutput = "";
-    for(Show show in EpitrackApp.showsList){
-      jsonOutput += json.encode(show.toJson()) + '\n';
-    }
-
-    file.writeAsStringSync(jsonOutput);
-    print(jsonOutput);  // DEBUG PRINT
-    print('JSON saved!');
-  }
-
-  static Future<bool> loadShowsFromJson() async {
-    print('Loading JSON...');
-    final dir = await getApplicationDocumentsDirectory();
-    final path = dir.path;
-    final fileName = 'shows.json';
-    File file = File('$path/$fileName');
-
-    String jsonInput = file.readAsStringSync();
-    print(jsonInput);  // DEBUG PRINT
-    List<String> jsonStrings = jsonInput.split('\n');
-    List<Show> shows = List<Show>();
-    //Decodes each line individually and adds it to the list
-    for(String jsonString in jsonStrings){
-      if(jsonString.isNotEmpty){
-        shows.add(Show.fromJson(json.decode(jsonString)));
-      }
-    }
-        print('load ${shows[0].getEpisodes()[0].getWatched()}');
-
-    EpitrackApp.showsList = shows;
-    print('JSON loaded!');
-    return true;  // Set the future data to true to signal loading complete
-  }
-
 }
 
 class ShowsScreen extends StatefulWidget {
@@ -85,7 +36,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(  // FutureBuilder waits for the shows to be loaded from the JSON file
-      future: EpitrackApp.loadShowsFromJson(),
+      future: Utils.loadShowsFromJson(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot){
         if(snapshot.hasData){  // Shows properly loaded, show list
           return Scaffold(
@@ -212,7 +163,7 @@ class _NewShowScreenState extends State<NewShowScreen> {
                   //Form is okay, add show
                   _formKey.currentState.save();
                   EpitrackApp.showsList.add(_newShow);
-                  EpitrackApp.saveShowsToJson();  // Saves to persistent storage
+                  Utils.saveShowsToJson();  // Saves to persistent storage
                   Navigator.pop(context, _newShow); //Returns to previous screen
                 } else {
                   //Form isn't okay
@@ -241,7 +192,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
 
   //Constructor
   _ShowDetailsScreenState(String showName){
-    _show = EpitrackApp.getShowByName(showName);
+    _show = Utils.getShowByName(showName);
   }
 
   @override
@@ -297,7 +248,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
             child: Text('Delete show'),
             onPressed: (){
               EpitrackApp.showsList.remove(_show);
-              EpitrackApp.saveShowsToJson();
+              Utils.saveShowsToJson();
               Navigator.pop(context);
             },
           )
@@ -401,7 +352,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                   onPressed: (){
                     setState((){
                       episode.setWatched(!episode.getWatched());  // Toggles watched
-                      EpitrackApp.saveShowsToJson();
+                      Utils.saveShowsToJson();
                     });
                   }
                 ),
@@ -513,7 +464,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
 
                   _show.setName(_showName);
 
-                  EpitrackApp.saveShowsToJson();
+                  Utils.saveShowsToJson();
                   Navigator.pop(context);
                 } 
                 else {  //Form isn't okay
@@ -570,7 +521,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
                 if (_formKey.currentState.validate()) {  // Form is okay, add season
                   _formKey.currentState.save();
                   _show.addSeason(name: _newSeasonName);
-                  EpitrackApp.saveShowsToJson();  // Saves to persistent storage
+                  Utils.saveShowsToJson();  // Saves to persistent storage
                   Navigator.pop(context); // Returns to previous screen
                 } else {  // Form isn't okay
                   print('Error adding season!');  // DEBUG PRINT
@@ -626,7 +577,9 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
             child: Text('Delete season'),
             onPressed: (){
               _show.getSeasons().remove(_season);
-              EpitrackApp.saveShowsToJson();
+              Utils.fixListNumbers(_show.getSeasons());
+              
+              Utils.saveShowsToJson();
               Navigator.pop(context);
             },
           )
@@ -683,7 +636,7 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
                 this._formKey.currentState.save();
                 this._season.setName(this._seasonName);
 
-                EpitrackApp.saveShowsToJson();
+                Utils.saveShowsToJson();
                 Navigator.pop(context);
               } 
               else {  // Form isn't okay
@@ -845,7 +798,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                                 airingDateAndTime: _selectedDateAndTime,
                                 durationMinutes: _newEpisodeDuration
                                 );
-                EpitrackApp.saveShowsToJson();  // Saves to persistent storage
+                Utils.saveShowsToJson();  // Saves to persistent storage
                 Navigator.pop(context);
               }
               else{  // Form isn't okay
@@ -913,12 +866,14 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
             onPressed: (){
               if(_season == null){  // Episode has no season, remove from show's list
                 _show.getEpisodes().remove(_episode);
+                Utils.fixListNumbers(_show.getEpisodes());
               }
               else{  // Episode has a season, remove from season's list
                 _season.getEpisodes().remove(_episode);
+                Utils.fixListNumbers(_season.getEpisodes());
               }
 
-              EpitrackApp.saveShowsToJson();
+              Utils.saveShowsToJson();
               Navigator.pop(context);
             },
           )
@@ -1086,7 +1041,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                   _episode.setAiringDateAndTime(_selectedDateAndTime);
                   _episode.setDuration(_episodeDuration);
 
-                  EpitrackApp.saveShowsToJson();
+                  Utils.saveShowsToJson();
                   Navigator.pop(context);
                 }
                 else{   // Different season, remove from the current one and readd to the new one
@@ -1109,7 +1064,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                     durationMinutes: _episodeDuration
                   );
 
-                  EpitrackApp.saveShowsToJson();
+                  Utils.saveShowsToJson();
                   Navigator.pop(context);
                   Navigator.pop(context);  // Closes the episode details screen too since it now refers to a removed Episode object
                 }
@@ -1333,12 +1288,15 @@ class DateAndTime {
 }
 
 class Constants{
-  // Episode types
+  // Possible types of episodes
   static const EPISODETYPES = {
     'Episode' : 'E',
     'Movie' : 'M',
     'Special' : 'SP',
-    'OVA' : 'OVA'
+    'OVA' : 'OVA',
+    'Extra' : 'EX',
+    'Trailer' : 'T',
+    'Miscellaneous' : 'MISC'
   };
   
   // Theme
@@ -1366,6 +1324,58 @@ class Constants{
 }
 
 class Utils{
+
+  // Saves current list of shows to a JSON file for persistent storage
+  static void saveShowsToJson() async {
+    print('Saving JSON...');
+    final dir = await getApplicationDocumentsDirectory();
+    final path = dir.path;
+    final fileName = 'shows.json';
+    File file = File('$path/$fileName');
+
+    // Encodes each show individually and separates them with \n
+    String  jsonOutput = "";
+    for(Show show in EpitrackApp.showsList){
+      jsonOutput += json.encode(show.toJson()) + '\n';
+    }
+
+    file.writeAsStringSync(jsonOutput);
+    print(jsonOutput);  // DEBUG PRINT
+    print('JSON saved!');
+  }
+
+  // Loads shows from JSON file, replaces current list of shows
+  static Future<bool> loadShowsFromJson() async {
+    print('Loading JSON...');
+    final dir = await getApplicationDocumentsDirectory();
+    final path = dir.path;
+    final fileName = 'shows.json';
+    File file = File('$path/$fileName');
+
+    String jsonInput = file.readAsStringSync();
+    print(jsonInput);  // DEBUG PRINT
+    List<String> jsonStrings = jsonInput.split('\n');
+    List<Show> shows = List<Show>();
+    //Decodes each line individually and adds it to the list
+    for(String jsonString in jsonStrings){
+      if(jsonString.isNotEmpty){
+        shows.add(Show.fromJson(json.decode(jsonString)));
+      }
+    }
+        print('load ${shows[0].getEpisodes()[0].getWatched()}');
+
+    EpitrackApp.showsList = shows;
+    print('JSON loaded!');
+    return true;  // Set the future data to true to signal loading complete
+  }
+  
+  // Returns a Show object with the given name
+  static Show getShowByName(String name){
+    return EpitrackApp.showsList.singleWhere((element){
+      return element.name == name;
+    });
+  }
+
   // Adds zeros to the left of a number until it reaches 'numberOfDigits'. Doesn't add anything if it already has at least 'numberOfDigits' digits.
   static String padLeadingZeros(var input, int numberOfDigits){
     var num = input;
@@ -1385,6 +1395,15 @@ class Utils{
 
     zerosToAdd = numberOfDigits - inputDigits;
     return '0'*zerosToAdd + input.toString();
+  }
+
+  // Sets the number for every item in a list in order starting from 'initialNumber'
+  static void fixListNumbers(List<dynamic> list, {int initialNumber=1}){
+    int currentNumber = initialNumber;
+
+    for(var item in list){
+      item.setNumber(currentNumber++);
+    }
   }
 }
 
