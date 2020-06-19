@@ -34,6 +34,7 @@ class EpitrackApp extends StatelessWidget {
   }
 
   static void saveShowsToJson() async {
+    print('Saving JSON...');
     final dir = await getApplicationDocumentsDirectory();
     final path = dir.path;
     final fileName = 'shows.json';
@@ -46,15 +47,19 @@ class EpitrackApp extends StatelessWidget {
     }
 
     file.writeAsStringSync(jsonOutput);
+    print(jsonOutput);
+    print('JSON saved!');
   }
 
   static Future<bool> loadShowsFromJson() async {
+    print('Loading JSON...');
     final dir = await getApplicationDocumentsDirectory();
     final path = dir.path;
     final fileName = 'shows.json';
     File file = File('$path/$fileName');
 
     String jsonInput = file.readAsStringSync();
+    print(jsonInput);
     List<String> jsonStrings = jsonInput.split('\n');
     List<Show> shows = List<Show>();
     //Decodes each line individually and adds it to the list
@@ -63,8 +68,10 @@ class EpitrackApp extends StatelessWidget {
         shows.add(Show.fromJson(json.decode(jsonString)));
       }
     }
+        print('load ${shows[0].getEpisodes()[0].getWatched()}');
 
     EpitrackApp.showsList = shows;
+    print('JSON loaded!');
     return true;  // Set the future data to true to signal loading complete
   }
 
@@ -85,6 +92,9 @@ class _ShowsScreenState extends State<ShowsScreen> {
             appBar: AppBar(title: Text('Epitrack | Shows')),
             body: _buildShowsList(),
             floatingActionButton: FloatingActionButton(
+              tooltip: 'New show',
+              child: Icon(Icons.add),
+              backgroundColor: Constants.mainColor,
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => NewShowScreen()))
                   .then((_){
@@ -93,10 +103,7 @@ class _ShowsScreenState extends State<ShowsScreen> {
                     });
                   });
               },
-              tooltip: 'New show',
-              child: Icon(Icons.add),
-              backgroundColor: Constants.mainColor,
-            ),
+            )
           );
         }
         else{  // Shows not loaded yet, show temporary  loading screen
@@ -553,7 +560,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   List<Season> _seasons = List<Season>();  // All seasons, including "no season"
   
   String _newEpisodeName;
-  double _newEpisodeDuration;
+  int _newEpisodeDuration;
   Season _selectedSeason;  // Season currently selected in the dropdown menu
   String _selectedType;  // Episode type currently selected in the dropdown menu
   DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
@@ -667,10 +674,11 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
               inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
               onSaved: (String value){
                 if(value != ''){
-                  _newEpisodeDuration = double.parse(value);
+                  _newEpisodeDuration = int.parse(value);
                 }
               }
-            ))
+            )),
+            Text('seconds')
           ]),
           RaisedButton(  // Submit button
             color: Constants.highlightColor,
@@ -722,8 +730,21 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(title: _season == null ?   // Remove season number from appbar if there is no season
-                        Text('Epitrack | E' + _episode.getNumber().toString() + ' $_show')
-                      : Text('Epitrack | S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' $_show')),
+          Text('Epitrack | E' + _episode.getNumber().toString() + ' $_show')
+        : Text('Epitrack | S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' $_show')),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Edit episode',
+        child: Icon(Icons.edit),
+        backgroundColor: Constants.mainColor,
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => EditEpisodeScreen(this._episode, this._season, this._show)))
+            .then((_){
+              setState((){
+                //Updates details
+              });
+            });
+        },
+      ),
       body: Column(
         children: [
           Text('Name: ' + _episode.getName()),
@@ -755,6 +776,199 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
   }
 }
 
+class EditEpisodeScreen extends StatefulWidget{
+  final Episode _episode;
+  final Season _season;
+  final Show _show;
+
+  EditEpisodeScreen(this._episode, this._season, this._show);
+
+  @override
+  _EditEpisodeScreenState createState() => _EditEpisodeScreenState(this._episode, this._season, this._show);
+}
+class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
+  final Episode _episode;
+  final Season _season;
+  final Show _show;
+
+  final _formKey = GlobalKey<FormState>();
+  List<Season> _seasons = List<Season>();  // All seasons, including "no season"
+  
+  String _episodeName;
+  int _episodeDuration;
+  Season _selectedSeason;  // Season currently selected in the dropdown menu
+  String _selectedType;  // Episode type currently selected in the dropdown menu
+  DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
+
+  _EditEpisodeScreenState(this._episode, this._season, this._show){
+    this._seasons.add(Season(0, "No season"));
+    for (Season season in this._show.getSeasons()){
+      this._seasons.add(season);
+    }
+
+    _episodeName = _episode.getName();
+    _episodeDuration = _episode.getDuration();
+    _selectedSeason = this._season == null ? this._seasons[0] : this._season;
+    _selectedType = this._episode.getType();
+    _selectedDateAndTime = this._episode.getAiringDateAndTime();
+
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: _season == null ?   // Remove season number from appbar if there is no season
+                        Text('Epitrack | Editing E' + _episode.getNumber().toString() + ' of $_show')
+                      : Text('Epitrack | Editing S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' of $_show')),
+      body: _buildEditEpisodeForm()
+    );
+  }
+
+  Widget _buildEditEpisodeForm(){
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(child: Column(
+        children: <Widget>[
+          Row(children: [  // Episode name
+            Text('Name: '),
+            Container(width: 300, child: TextFormField(  // Episode name text box
+              initialValue: _episodeName,  
+              onSaved: (String value){
+                _episodeName = value;
+              },
+            ))
+          ]), 
+          Row(children: [  // Season
+            Text('Season: '),
+            DropdownButton(  // Season dropdown
+              hint: Text('Select a season'),
+              value: _selectedSeason,
+              onChanged: (newValue){
+                setState((){
+                  _selectedSeason = newValue;
+                });
+              },
+              items: _seasons.map((season){
+                return DropdownMenuItem(
+                  child: new Text(season.getNumber() == 0 ? season.getName() : season.toString()),  // Returns only name for season 0 (no season)
+                  value: season
+                );
+              }).toList()
+            ),
+          ]),
+          Row(children: [  // Episode type
+            Text('Type: '),
+            DropdownButton(  // Episode type dropdown
+              hint: Text('Select an episode type'),
+              value: _selectedType,
+              onChanged: (newValue){
+                setState((){
+                  _selectedType = newValue;
+                });
+              },
+              items: Constants.EPISODETYPES.keys.map((type){
+                return DropdownMenuItem(
+                  child: new Text(type),
+                  value: Constants.EPISODETYPES[type]
+                );
+              }).toList()
+            ),
+          ]),       
+          Row(children: [  // Airing date
+            Text(_selectedDateAndTime.getYear() == null ? 'Airing date: - ' : 'Airing date: ${_selectedDateAndTime.getDateString()}'),
+            RaisedButton(
+              color: Constants.highlightColor,
+              child: Text('Select date'),
+              onPressed: () async{
+                DateTime _date = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(-5000), lastDate: DateTime(5000));
+                setState((){
+                  if(_date != null){  // If a date was selected
+                    _selectedDateAndTime.setYear(_date.year);
+                    _selectedDateAndTime.setMonth(_date.month);
+                    _selectedDateAndTime.setDay(_date.day);
+                  }
+                });
+              },
+            )
+          ],),
+          Row(children: [  // Airing time
+            Text(_selectedDateAndTime.getHour() == null ? 'Airing time: - ' : 'Airing time: ${_selectedDateAndTime.getTimeString()}'),
+            RaisedButton(
+              color: Constants.highlightColor,
+              child: Text('Select time'),
+              onPressed: () async{
+                TimeOfDay _time = await showTimePicker(context: context, initialTime: TimeOfDay(hour: 0, minute: 0));
+                setState((){
+                  if(_time != null){  // If a time was selected
+                    _selectedDateAndTime.setHour(_time.hour);
+                    _selectedDateAndTime.setMinute(_time.minute);
+                  }
+                });
+              },
+            )
+          ],),
+          Row(children: [  // Duration
+            Text('Duration: '),
+            Container(width: 100, child: TextFormField(
+              initialValue: _episodeDuration.toString(),
+              keyboardType: TextInputType.number,
+              inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
+              onSaved: (String value){
+                if(value != ''){
+                  _episodeDuration = int.parse(value);
+                }
+              }
+            )),
+            Text('seconds')
+          ]),
+          RaisedButton(  // Submit button
+            color: Constants.highlightColor,
+            child: Text('Save changes'),
+            onPressed: (){
+              if(_formKey.currentState.validate()){  // Form is okay, add episode
+                _formKey.currentState.save();
+
+                if(_selectedSeason == _season){  // Same season, just update values
+                  _episode.setName(_episodeName);
+                  _episode.setType(_selectedType);
+                  _episode.setAiringDateAndTime(_selectedDateAndTime);
+                  _episode.setDuration(_episodeDuration);
+                }
+                else{   // Different season, remove from the current one and readd to the new one
+                  
+                  // Removes the episode from the appropriate list
+                  if(this._season == null){
+                    _show.getEpisodes().remove(this._episode);
+                  }
+                  else{
+                    _season.getEpisodes().remove(this._episode);
+                  }
+
+                  // Readd the episode with the new changes
+                  _show.addEpisode(
+                    name: _episodeName, 
+                    season: _selectedSeason, 
+                    type: _selectedType == null ? Constants.EPISODETYPES['Episode'] : _selectedType,  // Defaults to type 'Episode'
+                    watched: _episode.getWatched(),
+                    airingDateAndTime: _selectedDateAndTime,
+                    durationMinutes: _episodeDuration
+                  );
+                }
+
+                EpitrackApp.saveShowsToJson();  // Saves to persistent storage
+                Navigator.pop(context);
+              }
+              else{  // Form isn't okay
+                print('Error adding episode!');
+              }
+            },
+          )
+        ]
+      )
+    ));
+  }
+}
+
 @JsonSerializable(explicitToJson: true)
 class Show {
   String name;
@@ -771,7 +985,7 @@ class Show {
   // Returns list of episodes
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
-  void addEpisode({String name="", Season season, String type, DateAndTime airingDateAndTime, double durationMinutes}){
+  void addEpisode({String name="", Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int _nextEpisodeNumber;
       Iterable<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} );
@@ -783,10 +997,10 @@ class Show {
         _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
       }
 
-      this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type, airingDateAndTime: airingDateAndTime, durationMinutes: durationMinutes));
+      this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type, watched: watched, airingDateAndTime: airingDateAndTime, durationMinutes: durationMinutes));
     }
     else{  // Calls the season's addEpisode() function
-      season.addEpisode(name: name, type: type, airingDateAndTime: airingDateAndTime, durationMinutes: durationMinutes);
+      season.addEpisode(name: name, type: type, watched: watched, airingDateAndTime: airingDateAndTime, durationMinutes: durationMinutes);
     }
 
     
@@ -853,7 +1067,7 @@ class Season{
   // Returns list of episodes
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate season number
-  void addEpisode({String name="", String type='E', DateAndTime airingDateAndTime, double durationMinutes}){
+  void addEpisode({String name="", String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes}){
     int _nextEpisodeNumber;
     List<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} ).toList();
     
@@ -864,7 +1078,7 @@ class Season{
       _nextEpisodeNumber = _sameTypeEpisodes.last.getNumber() + 1;
     }
 
-    this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type, airingDateAndTime: airingDateAndTime, durationMinutes: durationMinutes));
+    this.episodes.add(Episode(_nextEpisodeNumber, name: name, type: type, watched: watched, airingDateAndTime: airingDateAndTime, durationMinutes: durationMinutes));
   }
 
   // Returns the total number of episodes in the season
@@ -878,19 +1092,6 @@ class Season{
   factory Season.fromJson(Map<String, dynamic> json) => _$SeasonFromJson(json);
   Map<String, dynamic> toJson() => _$SeasonToJson(this);
 
-  /*DEBUG json
-  // JSON
-  Season.fromJson(Map<String, dynamic> json)
-    : _number = json['number'],
-      _name = json['name'],
-      _episodes = json['episodes'];
-  Map<String, dynamic> toJson() =>
-    {
-      'number': _number,
-      'name': _name,
-      'episodes': _episodes
-    };*/
-
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -900,9 +1101,9 @@ class Episode{
   String type;
   bool watched;
   DateAndTime airingDateAndTime;  // Date and time when the episode aired
-  double durationMinutes;  // Duration of the episode in minutes
+  int durationMinutes;  // Duration of the episode in minutes
 
-  Episode(int number, {String name="", String type, DateAndTime airingDateAndTime, double durationMinutes}){
+  Episode(int number, {String name="", String type, bool watched=false, DateAndTime airingDateAndTime, int durationMinutes}){
     this.number = number;
     this.name = name;
     type == null ? this.type = Constants.EPISODETYPES['Episode'] : this.type = type;
@@ -927,8 +1128,8 @@ class Episode{
   DateAndTime getAiringDateAndTime() => this.airingDateAndTime;
   void setAiringDateAndTime(DateAndTime newDateAndTime) => this.airingDateAndTime = newDateAndTime;
 
-  double getDuration() => this.durationMinutes;
-  void setDuration(double newDuration) => this.durationMinutes = newDuration;
+  int getDuration() => this.durationMinutes;
+  void setDuration(int newDuration) => this.durationMinutes = newDuration;
 
   String toString() => this.name.isEmpty ? this.type+this.number.toString() : this.type+this.number.toString()+': '+this.name;
 
