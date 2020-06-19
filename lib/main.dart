@@ -47,7 +47,7 @@ class EpitrackApp extends StatelessWidget {
     }
 
     file.writeAsStringSync(jsonOutput);
-    print(jsonOutput);
+    print(jsonOutput);  // DEBUG PRINT
     print('JSON saved!');
   }
 
@@ -59,7 +59,7 @@ class EpitrackApp extends StatelessWidget {
     File file = File('$path/$fileName');
 
     String jsonInput = file.readAsStringSync();
-    print(jsonInput);
+    print(jsonInput);  // DEBUG PRINT
     List<String> jsonStrings = jsonInput.split('\n');
     List<Show> shows = List<Show>();
     //Decodes each line individually and adds it to the list
@@ -273,7 +273,21 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
   }
 
   Widget _buildDetailsTab(){
-    return Column(
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Edit show',
+        child: Icon(Icons.edit),
+        backgroundColor: Constants.mainColor,
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => EditShowScreen(this._show)))
+            .then((_){
+              setState((){
+                //Updates details
+              });
+            });
+        },
+      ),
+      body: Column(
         children: [
           Text('Name: ' + _show.getName()),
           Text('Number of seasons: ' + _show.getNumberOfSeasons().toString()),
@@ -288,7 +302,8 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
             },
           )
         ]
-      );
+      )
+    );
   }
 
   Widget _buildSeasonsTab(){
@@ -446,6 +461,70 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
     );
   }
   
+}
+
+class EditShowScreen extends StatefulWidget{
+  final Show _show;
+
+  EditShowScreen(this._show);
+
+  @override
+  _EditShowScreenState createState() => _EditShowScreenState(this._show);
+}
+class _EditShowScreenState extends State<EditShowScreen>{
+  final Show _show;
+
+  final _formKey = GlobalKey<FormState>();
+  String _showName;
+
+  _EditShowScreenState(this._show){
+    this._showName = this._show.getName();
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text('Epitrack | Editing $_show')),
+      body: _buildEditShowForm()
+    );
+  }
+
+  Widget _buildEditShowForm(){
+    return Form(
+        key: _formKey,
+        child: Column(
+          children: <Widget>[
+            Row( children:[
+              Text('Name: '),
+              Container(width: 300, child: TextFormField(
+                initialValue: _showName,
+                validator: Validators.showNameValidator,
+                onSaved: (String value) {
+                  this._showName = value;
+                },
+              )),
+            ]),
+            RaisedButton(
+              color: Constants.highlightColor,
+              child: Text('Save changes'),
+              onPressed: () {
+                if (_formKey.currentState.validate()) {  //Form is okay, add show
+                  _formKey.currentState.save();
+
+                  _show.setName(_showName);
+
+                  EpitrackApp.saveShowsToJson();
+                  Navigator.pop(context);
+                } 
+                else {  //Form isn't okay
+                  print('Error adding show!');
+                }
+              },
+            )
+          ]
+        )
+      );
+  }
 }
 
 class NewSeasonScreen extends StatefulWidget {
@@ -1306,5 +1385,23 @@ class Utils{
 
     zerosToAdd = numberOfDigits - inputDigits;
     return '0'*zerosToAdd + input.toString();
+  }
+}
+
+class Validators{
+  static String showNameValidator(String value){
+    // Tests if name is empty
+    if (value.isEmpty) {
+      return "Name can't be empty";
+    }
+
+    // Tests if there's already a show with the same name
+    for(Show show in EpitrackApp.showsList){
+      if(show.getName() == value){
+        return "There's already a show with that name";
+      }
+    }
+
+    return null;  // Name is okay
   }
 }
