@@ -40,7 +40,8 @@ class _ShowsScreenState extends State<ShowsScreen> {
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot){
         if(snapshot.hasData){  // Shows properly loaded, show list
           return Scaffold(
-            appBar: AppBar(title: Text('Epitrack | Shows')),
+            appBar: AppBar(title: Text('Epitrack | Shows', style: TextStyle(fontSize: Constants.appbarFontSize))),
+            drawer: Utils.buildEpitrackDrawer(context),
             body: _buildShowsList(),
             floatingActionButton: FloatingActionButton(
               tooltip: 'New show',
@@ -134,40 +135,27 @@ class _NewShowScreenState extends State<NewShowScreen> {
         key: _formKey,
         child: Column(
           children: <Widget>[
-            TextFormField(
-              decoration: InputDecoration(labelText: 'Name'),
-              validator: (String value) {
-                // Tests if name is empty
-                if (value.isEmpty) {
-                  return "Name can't be empty";
-                }
-
-                // Tests if there's already a show with the same name
-                for(Show show in EpitrackApp.showsList){
-                  if(show.getName() == value){
-                    return "There's already a show with that name";
-                  }
-                }
-
-                return null;  // Name is okay
-              },
-              onSaved: (String value) {
-                _newShow.setName(value);
-              },
-            ),
+            Row( children:[
+              Text('Name: '),
+              Container(width: 300, child: TextFormField(
+                validator: Validators.showNameValidator,
+                onSaved: (String value) {
+                  _newShow.setName(value);
+                },
+              )),
+            ]),
             RaisedButton(
               color: Constants.highlightColor,
               child: Text('Add'),
               onPressed: () {
-                if (_formKey.currentState.validate()) {
-                  //Form is okay, add show
+                if (_formKey.currentState.validate()) {  //Form is okay, add show
                   _formKey.currentState.save();
+
                   EpitrackApp.showsList.add(_newShow);
-                  Utils.saveShowsToJson();  // Saves to persistent storage
-                  Navigator.pop(context, _newShow); //Returns to previous screen
-                } else {
-                  //Form isn't okay
-                  print('Error adding show!');  //DEBUG PRINT
+                  Utils.saveShowsToJson();
+                  Navigator.pop(context, _newShow);
+                } else {  //Form isn't okay
+                  print('Error adding show!');
                 }
               },
             )
@@ -201,7 +189,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
         length: 3,
         child: Scaffold( 
           appBar: AppBar(
-            title: Text('Epitrack | ' + _show.getName()),
+            title: Text('Epitrack | ' + _show.getName(), style: TextStyle(fontSize: Constants.appbarFontSize)),
             bottom: TabBar(
               tabs: [
                 //Tab headers
@@ -435,7 +423,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | Editing $_show')),
+      appBar: AppBar(title: Text('Epitrack | Editing $_show', style: TextStyle(fontSize: Constants.appbarFontSize))),
       body: _buildEditShowForm()
     );
   }
@@ -498,7 +486,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | New season')),
+      appBar: AppBar(title: Text('Epitrack | New season', style: TextStyle(fontSize: Constants.appbarFontSize))),
       body: _buildNewSeasonForm()
     );
   }
@@ -521,10 +509,10 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
                 if (_formKey.currentState.validate()) {  // Form is okay, add season
                   _formKey.currentState.save();
                   _show.addSeason(name: _newSeasonName);
-                  Utils.saveShowsToJson();  // Saves to persistent storage
-                  Navigator.pop(context); // Returns to previous screen
+                  Utils.saveShowsToJson();
+                  Navigator.pop(context);
                 } else {  // Form isn't okay
-                  print('Error adding season!');  // DEBUG PRINT
+                  print('Error adding season!');
                 }
               },
             )
@@ -553,7 +541,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | S' + _season.getNumber().toString() + ' of $_show')),
+      appBar: AppBar(title: Text('Epitrack | S' + _season.getNumber().toString() + ' of $_show', style: TextStyle(fontSize: Constants.appbarFontSize))),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Edit season',
         child: Icon(Icons.edit),
@@ -578,7 +566,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
             onPressed: (){
               _show.getSeasons().remove(_season);
               Utils.fixListNumbers(_show.getSeasons());
-              
+
               Utils.saveShowsToJson();
               Navigator.pop(context);
             },
@@ -612,7 +600,7 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | Editing S' + _season.getNumber().toString() + ' of $_show')),
+      appBar: AppBar(title: Text('Epitrack | Editing S' + _season.getNumber().toString() + ' of $_show', style: TextStyle(fontSize: Constants.appbarFontSize))),
       body: _buildEditSeasonForm()
     );
   }
@@ -683,7 +671,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Epitrack | New episode')),
+      appBar: AppBar(title: Text('Epitrack | New episode', style: TextStyle(fontSize: Constants.appbarFontSize))),
       body: _buildNewEpisodeForm()
     );
   }
@@ -835,8 +823,8 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(title: _season == null ?   // Remove season number from appbar if there is no season
-          Text('Epitrack | E' + _episode.getNumber().toString() + ' $_show')
-        : Text('Epitrack | S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' $_show')),
+          Text('Epitrack | E' + _episode.getNumber().toString() + ' $_show', style: TextStyle(fontSize: Constants.appbarFontSize))
+        : Text('Epitrack | S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' $_show', style: TextStyle(fontSize: Constants.appbarFontSize))),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Edit episode',
         child: Icon(Icons.edit),
@@ -925,8 +913,8 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(title: _season == null ?   // Remove season number from appbar if there is no season
-                        Text('Epitrack | Editing E' + _episode.getNumber().toString() + ' of $_show')
-                      : Text('Epitrack | Editing S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' of $_show')),
+                        Text('Epitrack | Editing E' + _episode.getNumber().toString() + ' of $_show', style: TextStyle(fontSize: Constants.appbarFontSize))
+                      : Text('Epitrack | Editing S' + _season.getNumber().toString() + 'E' + _episode.getNumber().toString() + ' of $_show', style: TextStyle(fontSize: Constants.appbarFontSize))),
       body: _buildEditEpisodeForm()
     );
   }
@@ -1079,6 +1067,57 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
     ));
   }
 }
+
+class UpcomingEpisodesScreen extends StatefulWidget{
+  @override
+  _UpcomingEpisodesScreenState createState() => _UpcomingEpisodesScreenState();
+}
+class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
+  List<Episode> _allEpisodes = List<Episode>();
+
+  _UpcomingEpisodesScreenState(){
+    for(Show show in EpitrackApp.showsList){  // Goes through every show
+      for(Episode episode in show.getEpisodes()){  // Adds all the episodes without a season
+        _allEpisodes.add(episode);
+      }
+      for(Season season in show.getSeasons()){  // Adds all the episodes in every season
+        for(Episode episode in season.getEpisodes()){
+          _allEpisodes.add(episode);
+        }
+      }
+    }
+    _allEpisodes.sort(Comparators.compareEpisodesAiringDateAndTime);
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text('Epitrack | Upcoming episodes', style: TextStyle(fontSize: Constants.appbarFontSize))),
+      drawer: Utils.buildEpitrackDrawer(context),
+      body: ListView.builder(
+        itemCount: 2 * _allEpisodes.length,  // Accounts for dividers
+        itemBuilder: (BuildContext context, int listIndex){
+          // Adds dividers between items
+          if(listIndex.isOdd){
+            return Divider();
+          }
+
+          final int episodeIndex = listIndex ~/ 2; // Adjusts index to take into account the dividers in the list
+          final Episode currentEpisode = _allEpisodes[episodeIndex];
+          final DateAndTime currentEpisodeDateTime = currentEpisode.getAiringDateAndTime();
+
+          return ListTile(
+            title: Text(currentEpisode.toString()),
+            trailing: Text(currentEpisodeDateTime.hasDate() == false ? '-' :   // Has no date
+                            currentEpisodeDateTime.hasTime() ? '${currentEpisodeDateTime.getDateString()} @ ${currentEpisodeDateTime.getTimeString()}' :  // Has date and time
+                            currentEpisodeDateTime.getDateString()),  // Has date, but no time
+          );
+        },
+      )
+    );
+  }
+}
+
 
 @JsonSerializable(explicitToJson: true)
 class Show {
@@ -1273,11 +1312,33 @@ class DateAndTime {
   int getMinute() => this.minute;
   void setMinute(int newMinute) => this.minute = newMinute;
 
+  bool hasDate() => this.year != null;
+  bool hasTime() => this.hour != null;
+
   String getDateString() => '${Utils.padLeadingZeros(this.year, 4)}-${Utils.padLeadingZeros(this.month, 2)}-${Utils.padLeadingZeros(this.day, 2)}';
   String getTimeString() => '${Utils.padLeadingZeros(this.hour, 2)}:${Utils.padLeadingZeros(this.minute, 2)}';
 
-  DateTime getDateTimeObject() => DateTime(this.year, this.month, this.day, this.hour, this.minute);
-  TimeOfDay getTimeOfDayObject() => TimeOfDay(hour: this.hour, minute: this.minute);
+  DateTime getDateTimeObject(){
+    if(this.year != null){  // Has a date
+      if(this.hour != null){  // Has a date and a time
+        return DateTime(this.year, this.month, this.day, this.hour, this.minute);
+      }
+      else{  // Has a date, but doesn't have a time. Defaults time to 00:00.
+        return DateTime(this.year, this.month, this.day, 0, 0);
+      }
+    }
+    else{ // Doesn't have a date
+      return null;
+    }
+  }
+  TimeOfDay getTimeOfDayObject(){
+    if(this.hour != null){  // Has a time
+      return TimeOfDay(hour: this.hour, minute: this.minute);
+    }
+    else{  // Doesn't have a time
+      return null;
+    }
+  }
 
   String toString(){
     return '${Utils.padLeadingZeros(this.year, 4)}-${Utils.padLeadingZeros(this.month, 2)}-${Utils.padLeadingZeros(this.day, 2)}, ${Utils.padLeadingZeros(this.hour, 2)}:${Utils.padLeadingZeros(this.minute, 2)}';
@@ -1299,10 +1360,13 @@ class Constants{
     'Miscellaneous' : 'MISC'
   };
   
+  // Fonts
+  static double appbarFontSize = 17;
+
   // Theme
-  static const Color mainColor = blue;
-  static const Color backgroundColor = blueBackground;
-  static const Color highlightColor = blueHighlight;
+  static const Color mainColor = bluegrey;
+  static const Color backgroundColor = bluegreyBackground;
+  static const Color highlightColor = bluegreyHighlight;
 
   // Colors
   static const Color red = Colors.red;  // red
@@ -1320,10 +1384,42 @@ class Constants{
   static const Color bluegrey = Colors.blueGrey;  // bluegrey
   static const Color bluegreyBackground = Color(4291811548);  // bluegrey[100]
   static const Color bluegreyHighlight = Color(4289773253);  // bluegrey[200]
+  static const Color orange = Colors.orange;  // orange
+  static const Color orangeBackground = Color(4294959282);  // orange[100]
+  static const Color orangeHighlight = Color(4294954112);  // orange[200]
 
 }
 
 class Utils{
+  // Builds the app's standard drawer
+  static Drawer buildEpitrackDrawer(BuildContext context){
+    return Drawer(
+      child: ListView(
+        children:[
+          DrawerHeader(
+            child: Text('Epitrack')
+          ),
+          ListTile(  // Shows
+            title: Text('Shows'),
+            onTap: (){
+              Navigator.pop(context);  // Closes drawer
+
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ShowsScreen()));
+            },
+          ),
+          Divider(),
+          ListTile(  // Upcoming episodes
+            title: Text('Upcoming episodes'),
+            onTap: (){
+              Navigator.pop(context);  // Closes drawer
+
+              Navigator.push(context, MaterialPageRoute(builder: (context) => UpcomingEpisodesScreen()));
+            },
+          )
+        ]
+      )
+    );
+  }
 
   // Saves current list of shows to a JSON file for persistent storage
   static void saveShowsToJson() async {
@@ -1340,7 +1436,6 @@ class Utils{
     }
 
     file.writeAsStringSync(jsonOutput);
-    print(jsonOutput);  // DEBUG PRINT
     print('JSON saved!');
   }
 
@@ -1353,7 +1448,6 @@ class Utils{
     File file = File('$path/$fileName');
 
     String jsonInput = file.readAsStringSync();
-    print(jsonInput);  // DEBUG PRINT
     List<String> jsonStrings = jsonInput.split('\n');
     List<Show> shows = List<Show>();
     //Decodes each line individually and adds it to the list
@@ -1362,7 +1456,6 @@ class Utils{
         shows.add(Show.fromJson(json.decode(jsonString)));
       }
     }
-        print('load ${shows[0].getEpisodes()[0].getWatched()}');
 
     EpitrackApp.showsList = shows;
     print('JSON loaded!');
@@ -1422,5 +1515,38 @@ class Validators{
     }
 
     return null;  // Name is okay
+  }
+}
+
+class Comparators{
+
+  // Compares two episodes' 'airingDateAndTime'. Returns -1 if a < b, 0 if a = b, 1 if a > b. Pushes episodes with no date to the end.
+  static int compareEpisodesAiringDateAndTime(Episode a, Episode b){
+    DateTime aDateTime = a.getAiringDateAndTime().getDateTimeObject();
+    DateTime bDateTime = b.getAiringDateAndTime().getDateTimeObject();
+
+    // Handles null times
+    if(aDateTime == null && bDateTime == null){
+      return 0;
+    }
+    if(bDateTime == null){
+      return -1;
+    }
+    if(aDateTime == null){
+      return 1;
+    }
+
+    if(aDateTime.isBefore(bDateTime)){
+      return -1;
+    }
+    else if(aDateTime.isAtSameMomentAs(bDateTime)){
+      return 0;
+    }
+    else if(aDateTime.isAfter(bDateTime)){
+      return 1;
+    }
+    else{  // Error
+      return null;
+    }
   }
 }
