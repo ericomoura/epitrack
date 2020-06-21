@@ -1104,13 +1104,10 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
 
           final int episodeIndex = listIndex ~/ 2; // Adjusts index to take into account the dividers in the list
           final Episode currentEpisode = _allEpisodes[episodeIndex];
-          final DateAndTime currentEpisodeDateTime = currentEpisode.getAiringDateAndTime();
 
           return ListTile(
             title: Text(currentEpisode.toString()),
-            trailing: Text(currentEpisodeDateTime.hasDate() == false ? '-' :   // Has no date
-                            currentEpisodeDateTime.hasTime() ? '${currentEpisodeDateTime.getDateString()} @ ${currentEpisodeDateTime.getTimeString()}' :  // Has date and time
-                            currentEpisodeDateTime.getDateString()),  // Has date, but no time
+            subtitle: Text(currentEpisode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
           );
         },
       )
@@ -1135,7 +1132,7 @@ class Show {
   // Returns list of episodes
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
-  void addEpisode({String name="", Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes}){
+  void addEpisode({String name, Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int _nextEpisodeNumber;
       Iterable<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} );
@@ -1217,7 +1214,7 @@ class Season{
   // Returns list of episodes
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate season number
-  void addEpisode({String name="", String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes}){
+  void addEpisode({String name, String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes}){
     int _nextEpisodeNumber;
     List<Episode> _sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} ).toList();
     
@@ -1253,15 +1250,10 @@ class Episode{
   DateAndTime airingDateAndTime;  // Date and time when the episode aired
   int durationMinutes;  // Duration of the episode in minutes
 
-  Episode(int number, {String name="", String type, bool watched=false, DateAndTime airingDateAndTime, int durationMinutes}){
-    this.number = number;
-    this.name = name;
-    type == null ? this.type = Constants.EPISODETYPES['Episode'] : this.type = type;
-    this.watched = false;
-    this.airingDateAndTime = airingDateAndTime;
-    this.durationMinutes = durationMinutes;
+  Episode(this.number, {this.name="", this.type, this.watched=false, this.airingDateAndTime, this.durationMinutes}){
+    this.type = this.type == null ? Constants.EPISODETYPES['Episode'] : this.type;
+    this.watched = this.watched == null ? false : this.watched;
   }
-
 
   bool getWatched() => this.watched;
   void setWatched(bool newStatus) => this.watched = newStatus;
@@ -1317,6 +1309,25 @@ class DateAndTime {
 
   String getDateString() => '${Utils.padLeadingZeros(this.year, 4)}-${Utils.padLeadingZeros(this.month, 2)}-${Utils.padLeadingZeros(this.day, 2)}';
   String getTimeString() => '${Utils.padLeadingZeros(this.hour, 2)}:${Utils.padLeadingZeros(this.minute, 2)}';
+  String getDateAndTimeString({bool allowJustTime=false}){  // Won't return time without a date unless 'allowJustTime' is true
+
+    if(this.hasDate()){
+      if(this.hasTime()){
+        return '${this.getDateString()} @ ${this.getTimeString()}';  // Date and time
+      }
+      else{
+        return '${this.getDateString()}';  // Just date
+      }
+    }
+    else{
+      if(this.hasTime() && allowJustTime){  // Just time
+        return '@ ${this.getTimeString()}';
+      }
+      else{  // No date and no time
+        return '-';
+      }
+    }
+  }
 
   DateTime getDateTimeObject(){
     if(this.year != null){  // Has a date
