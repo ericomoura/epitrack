@@ -251,10 +251,19 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
       ),
       body: Column(
         children: [
-          Text('Name: ${this._show.getName()}'),
-          Text('Number of seasons: ${this._show.getNumberOfSeasons()}'),
-          Text('Number of episodes: ${this._show.getNumberOfEpisodes()}'),
-          RaisedButton(
+          Row(children:[  // Name
+            Text('Name: '),
+            Text('${this._show.getName()}'),
+          ]),
+          Row(children: [  // Number of seasons
+            Text('Number of seasons: '),
+            Text('${this._show.getNumberOfSeasons()}'),
+          ]),
+          Row(children: [
+            Text('Number of episodes: '),
+            Text('${this._show.getNumberOfEpisodes()}'),
+          ]),
+          RaisedButton(  // Remove show button
             color: Constants.highlightColor,
             child: Text('Remove show'),
             onPressed: (){
@@ -594,10 +603,19 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
       ),
       body: Column(
         children: [
-          Text('Season name: ${this._season.getName()}'),
-          Text('Season number: ${this._season.getNumber()}'),
-          Text('Number of episodes: ${this._season.getNumberOfEpisodes()}'),
-          RaisedButton(
+          Row(children: [  // Name
+            Text('Season name: '),
+            Text('${this._season.getName()}'),
+          ]),
+          Row(children: [  // Number
+            Text('Season number: '),
+            Text('${this._season.getNumber()}'),
+          ]),
+          Row(children: [  // Number of episodes
+            Text('Number of episodes: '),
+            Text('${this._season.getNumberOfEpisodes()}'),
+          ]),
+          RaisedButton(  // Remove season button
             color: Constants.highlightColor,
             child: Text('Remove season'),
             onPressed: (){
@@ -898,13 +916,32 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
       ),
       body: Column(
         children: [
-          Text('Name: ${this._episode.getName()}'),
-          Text('Number: ${this._episode.getNumber()}'),
-          Text('Type: ' + Constants.EPISODETYPES.keys.singleWhere((key) => Constants.EPISODETYPES[key] == this._episode.getType()) ),
-          Text('Watched: ${this._episode.watched}'),
-          Text('Aired on: ${this._episode.getAiringDateAndTime().getDateAndTimeString()}'),
-          Text('Duration: ' + (this._episode.getDuration() == null ? '-' : '${this._episode.getDuration()} minutes')),
-          RaisedButton(
+          Row(children: [  // Name
+            Text('Name: '),
+            Text('${this._episode.getName()}'),
+          ]),
+          Row(children: [  // Number
+            Text('Number: '),
+            Text('${this._episode.getNumber()}'),
+          ]),
+          Row(children: [  // Type
+            Text('Type: '),
+            Text(Constants.EPISODETYPES.keys.singleWhere((key) => Constants.EPISODETYPES[key] == this._episode.getType())),
+          ]),
+          Row(children: [  // Watched
+            Text('Watched: '),
+            Text('${this._episode.watched}'),
+          ]),
+          Row(children: [  // Aired
+            Text('Aired on: '),
+            Text('${this._episode.getAiringDateAndTime().getDateAndTimeString()}'),
+          ]),
+          Row(children: [  // Duration
+            Text('Duration: '),
+            Text((this._episode.getDuration() == null ? '-' : '${this._episode.getDuration()}')),
+            Text(' minutes')
+          ]),
+          RaisedButton(  // Remove episode
             color: Constants.highlightColor,
             child: Text('Remove episode'),
             onPressed: (){
