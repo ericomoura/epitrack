@@ -30,6 +30,9 @@ Season _$SeasonFromJson(Map<String, dynamic> json) {
   return Season(
     json['number'] as int,
     json['name'] as String,
+    json['parentShow'] == null
+        ? null
+        : Show.fromJson(json['parentShow'] as Map<String, dynamic>),
   )..episodes = (json['episodes'] as List)
       ?.map(
           (e) => e == null ? null : Episode.fromJson(e as Map<String, dynamic>))
@@ -40,11 +43,18 @@ Map<String, dynamic> _$SeasonToJson(Season instance) => <String, dynamic>{
       'number': instance.number,
       'name': instance.name,
       'episodes': instance.episodes?.map((e) => e?.toJson())?.toList(),
+      'parentShow': instance.parentShow?.toJson(),
     };
 
 Episode _$EpisodeFromJson(Map<String, dynamic> json) {
   return Episode(
     json['number'] as int,
+    json['parentShow'] == null
+        ? null
+        : Show.fromJson(json['parentShow'] as Map<String, dynamic>),
+    json['parentSeason'] == null
+        ? null
+        : Season.fromJson(json['parentSeason'] as Map<String, dynamic>),
     name: json['name'] as String,
     type: json['type'] as String,
     watched: json['watched'] as bool,
@@ -63,6 +73,8 @@ Map<String, dynamic> _$EpisodeToJson(Episode instance) => <String, dynamic>{
       'watched': instance.watched,
       'airingDateAndTime': instance.airingDateAndTime?.toJson(),
       'durationMinutes': instance.durationMinutes,
+      'parentShow': instance.parentShow?.toJson(),
+      'parentSeason': instance.parentSeason?.toJson(),
     };
 
 DateAndTime _$DateAndTimeFromJson(Map<String, dynamic> json) {
