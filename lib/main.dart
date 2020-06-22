@@ -43,7 +43,7 @@ class _LoadingScreenState extends State<LoadingScreen>{
           Navigator.pop(context);
           Navigator.push(context, MaterialPageRoute(builder: (context)=>ShowsScreen()));
         });
-        
+
         // Temporary screen until it switches to ShowsScreen
         return Scaffold(
           appBar: AppBar(
@@ -359,7 +359,6 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                   onPressed: (){
                     setState((){
                       episode.setWatched(!episode.getWatched());  // Toggles watched
-
                       Utils.saveShowsToJson();
                     });
                   }
@@ -392,6 +391,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                   onPressed: (){
                     setState((){
                       episode.setWatched(!episode.getWatched());  // Toggles watched
+                      Utils.saveShowsToJson();
                     });
                   }
                 ),
@@ -1521,7 +1521,6 @@ class Utils{
     return null;
   }
 
-
   // Goes through all episodes, seasons (and their own episodes) and updates all 'parentShow' and 'parentSeason' attributes.
   static void updateParents(Show parentShow){
     for(Episode episode in parentShow.getEpisodes()){
@@ -1583,7 +1582,6 @@ class Utils{
       jsonOutput += json.encode(show.toJson()) + '\n';
     }
 
-    print(jsonOutput);
     file.writeAsStringSync(jsonOutput);
     print('JSON saved!');
   }
