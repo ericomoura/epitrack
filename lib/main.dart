@@ -1184,8 +1184,20 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
           final Episode currentEpisode = _allEpisodes[episodeIndex];
 
           return ListTile(
-            title: Text(currentEpisode.toString()),
+            title: Text( currentEpisode.getParentSeason() == null ?
+              'E${currentEpisode.getNumber()} of ${currentEpisode.getParentShow()}'
+              :
+              'S${currentEpisode.getParentSeason().getNumber()}E${currentEpisode.getNumber()} of ${currentEpisode.getParentShow()}'
+            ),
             subtitle: Text(currentEpisode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(currentEpisode)))
+              .then((_){
+                setState((){
+                  //Updates episode tile
+                });
+              });
+            },
           );
         },
       )
@@ -1477,7 +1489,7 @@ class Constants{
   };
 
   static int minYear = -5000;
-  static int maxYear = -5000;
+  static int maxYear = 5000;
 
   static String appbarPrefix = 'Epitrack | ';
   
