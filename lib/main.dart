@@ -557,6 +557,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
 
   @override
   Widget build(BuildContext context){
+    print(_season.getParentShow());
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -883,14 +884,11 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
       ),
       body: Column(
         children: [
-          Text('Parent show: ${this._episode.parentShow}'),
           Text('Name: ${this._episode.getName()}'),
           Text('Number: ${this._episode.getNumber()}'),
           Text('Type: ' + Constants.EPISODETYPES.keys.singleWhere((key) => Constants.EPISODETYPES[key] == this._episode.getType()) ),
           Text('Watched: ${this._episode.watched}'),
           Text('Aired on: ${this._episode.getAiringDateAndTime().getDateAndTimeString()}'),
-            //debug  + (this._episode.getAiringDateAndTime().hasDate() == false ? '-' : this._episode.getAiringDateAndTime().getDateString())
-            //debug  + (this._episode.getAiringDateAndTime().hasTime() == false ? '' : ' at  ${_episode.getAiringDateAndTime().getTimeString}')),
           Text('Duration: ' + (this._episode.getDuration() == null ? '-' : '${this._episode.getDuration()} minutes')),
           RaisedButton(
             color: Constants.highlightColor,
@@ -1272,8 +1270,7 @@ class Season{
   int number;
   String name;
   List<Episode> episodes = List<Episode>();
-
-  @JsonKey(toJson: null)  // Can't be saved to JSON to avoid infinite loop. Has to be updated after loading from JSON.
+  @JsonKey(toJson: Utils.parentShowToJson)
   Show parentShow;  // Reference to the show which contains this season
 
   Season(this.number, this.name, this.parentShow);
@@ -1300,7 +1297,7 @@ class Season{
       nextEpisodeNumber = sameTypeEpisodes.last.getNumber() + 1;
     }
 
-    this.episodes.add(Episode(nextEpisodeNumber, this.parentShow, this,
+    this.episodes.add(Episode(nextEpisodeNumber, this.getParentShow(), this,
       name: name, 
       type: type, 
       watched: watched, 
@@ -1328,14 +1325,15 @@ class Episode{
   bool watched;
   DateAndTime airingDateAndTime;  // Date and time when the episode aired
   int durationMinutes;  // Duration of the episode in minutes
-  
-  @JsonKey(toJson: null)  // Can't be saved to JSON to avoid infinite loop. Has to be updated after loading from JSON.
+  @JsonKey(toJson: Utils.parentShowToJson)
   Show parentShow;  // Reference to the show which contains this episode
-  @JsonKey(toJson: null)  // Can't be saved to JSON to avoid infinite loop. Has to be updated after loading from JSON.
+  @JsonKey(toJson: Utils.parentSeasonToJson)
   Season parentSeason;  // Reference to the season which contains this episode. If null, episode has no season.
 
 
-  Episode(this.number, this.parentShow, this.parentSeason, {this.name="", this.type, this.watched=false, this.airingDateAndTime, this.durationMinutes}){
+  Episode(this.number, Show parentShow, Season parentSeason, {this.name="", this.type, this.watched=false, this.airingDateAndTime, this.durationMinutes}){
+    this.setParentShow(parentShow);
+    this.setParentSeason(parentSeason);
     this.type = this.type == null ? Constants.EPISODETYPES['Episode'] : this.type;
     this.watched = this.watched == null ? false : this.watched;
   }
@@ -1364,7 +1362,7 @@ class Episode{
   Season getParentSeason() => this.parentSeason;
   void setParentSeason(Season season) => this.parentSeason = season;
 
-  String toString() => (this.getParentSeason() == null ? '': 'S${this.parentSeason.getNumber()}') 
+  String toString() => (this.getParentSeason() == null ? '': 'S${this.getParentSeason().getNumber()}') 
     + 'E${this.getNumber()}' 
     + (this.getName().isEmpty ? '' : ': ${this.getName()}');
 
@@ -1501,6 +1499,15 @@ class Constants{
 
 class Utils{
 
+  // Functions used to save Season and Episode to JSON. Parents can't be ignored so are set to null to avoid infinite loops in the JSON.
+  static String parentShowToJson(Show parentShow){
+    return null;
+  }
+  static String parentSeasonToJson(Season parentSeason){
+    return null;
+  }
+
+
   // Goes through all episodes, seasons (and their own episodes) and updates all 'parentShow' and 'parentSeason' attributes.
   static void updateParents(Show parentShow){
     for(Episode episode in parentShow.getEpisodes()){
@@ -1578,6 +1585,7 @@ class Utils{
     String jsonInput = file.readAsStringSync();
     List<String> jsonStrings = jsonInput.split('\n');
     List<Show> shows = List<Show>();
+
     //Decodes each line individually and adds it to the list
     for(String jsonString in jsonStrings){
       if(jsonString.isNotEmpty){
@@ -1597,9 +1605,11 @@ class Utils{
   
   // Returns a Show object with the given name
   static Show getShowByName(String name){
-    return EpitrackApp.showsList.singleWhere((element){
-      return element.name == name;
-    });
+    return EpitrackApp.showsList.singleWhere((element) => element.getName() == name);
+  }
+
+  static Season getSeasonByNumber(Show show, int number){
+    return show.getSeasons().singleWhere((element) => element.getNumber() == number);
   }
 
   // Adds zeros to the left of a number until it reaches 'numberOfDigits'. Doesn't add anything if it already has at least 'numberOfDigits' digits.
@@ -1631,6 +1641,7 @@ class Utils{
       item.setNumber(currentNumber++);
     }
   }
+
 }
 
 class Validators{
