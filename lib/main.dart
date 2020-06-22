@@ -22,72 +22,86 @@ class EpitrackApp extends StatelessWidget {
         canvasColor: Constants.backgroundColor,
         accentColor: Constants.mainColor
       ),
-      home: ShowsScreen(),
+      home: LoadingScreen(),
     );
   }
 
 }
 
-class ShowsScreen extends StatefulWidget {
+class LoadingScreen extends StatefulWidget{
   @override
-  _ShowsScreenState createState() => _ShowsScreenState();
+  _LoadingScreenState createState() => _LoadingScreenState();
 }
-class _ShowsScreenState extends State<ShowsScreen> {
+class _LoadingScreenState extends State<LoadingScreen>{
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
     return FutureBuilder<bool>(  // FutureBuilder waits for the shows to be loaded from the JSON file
       future: Utils.loadShowsFromJson(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot){
-        if(snapshot.hasData){  // Shows properly loaded, show list
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(
-                '${Constants.appbarPrefix}Shows', 
-                style: TextStyle(fontSize: Constants.appbarFontSize)
-              )
-            ),
-            drawer: Utils.buildEpitrackDrawer(context),
-            body: _buildShowsList(),
-            floatingActionButton: FloatingActionButton(
-              tooltip: 'New show',
-              child: Icon(Icons.add),
-              backgroundColor: Constants.mainColor,
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => NewShowScreen()))
-                  .then((_){
-                    setState((){
-                      //Updates ListView state
-                    });
-                  });
-              },
+        // Switches to ShowsScreen as soon as possible
+        Future.delayed(Duration.zero, () {
+          Navigator.pop(context);
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>ShowsScreen()));
+        });
+        
+        // Temporary screen until it switches to ShowsScreen
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              '${Constants.appbarPrefix}Loading...',
+              style: TextStyle(fontSize: Constants.appbarFontSize)
             )
-          );
-        }
-        else{  // Shows not loaded yet, show temporary  loading screen
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(
-                '${Constants.appbarPrefix}Shows',
-                style: TextStyle(fontSize: Constants.appbarFontSize)
-              )
-            ),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  Padding(
-                    padding: EdgeInsets.only(top: 10),
-                    child: Text('Loading saved shows...')
-                  )
-                ],
-              ))
-          );
-        }
+          ),
+          drawer: Utils.buildEpitrackDrawer(context),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Text('Loading saved shows...')
+                )
+              ],
+            ))
+        );
       }
     );
-    
+  }
+
+}
+
+class ShowsScreen extends StatefulWidget{
+  @override
+  _ShowsScreenState createState() => _ShowsScreenState();
+}
+class _ShowsScreenState extends State<ShowsScreen>{
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          '${Constants.appbarPrefix}Shows', 
+          style: TextStyle(fontSize: Constants.appbarFontSize)
+        )
+      ),
+      drawer: Utils.buildEpitrackDrawer(context),
+      body: _buildShowsList(),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'New show',
+        child: Icon(Icons.add),
+        backgroundColor: Constants.mainColor,
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => NewShowScreen()))
+            .then((_){
+              setState((){
+                //Updates ListView state
+              });
+            });
+        },
+      )
+    );
   }
 
   Widget _buildShowsList() {
@@ -119,11 +133,11 @@ class _ShowsScreenState extends State<ShowsScreen> {
 
 }
 
-class NewShowScreen extends StatefulWidget {
+class NewShowScreen extends StatefulWidget{
   @override
   _NewShowScreenState createState() => _NewShowScreenState();
 }
-class _NewShowScreenState extends State<NewShowScreen> {
+class _NewShowScreenState extends State<NewShowScreen>{
   final _formKey = GlobalKey<FormState>();
   String _newShowName = '';
 
