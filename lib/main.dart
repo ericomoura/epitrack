@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:intl/intl.dart';
 
 part 'main.g.dart';
 
@@ -259,9 +260,18 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
             Text('Number of seasons: '),
             Text('${this._show.getNumberOfSeasons()}'),
           ]),
-          Row(children: [
+          Row(children: [  // Number of episodes
             Text('Number of episodes: '),
             Text('${this._show.getNumberOfEpisodes()}'),
+          ]),
+          Row(children: [  // Total duration
+            Text('Total duration: '),
+            Text('${Utils.truncateDecimals(this._show.getTotalDurationHours(), 2)}'),
+            Text(' hours')
+          ]),
+          Row(children: [
+            Text('Airing period: '),
+            Text('${this._show.getAiringPeriod()}')
           ]),
           RaisedButton(  // Remove show button
             color: Constants.highlightColor,
@@ -580,7 +590,6 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
 
   @override
   Widget build(BuildContext context){
-    print(_season.getParentShow());
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -614,6 +623,15 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
           Row(children: [  // Number of episodes
             Text('Number of episodes: '),
             Text('${this._season.getNumberOfEpisodes()}'),
+          ]),
+          Row(children: [
+            Text('Total duration: '),
+            Text('${Utils.truncateDecimals(this._season.getTotalDurationHours(), 2)}'),
+            Text(' hours')
+          ]),
+          Row(children: [
+            Text('Airing period: '),
+            Text('${this._season.getAiringPeriod()}')
           ]),
           RaisedButton(  // Remove season button
             color: Constants.highlightColor,
@@ -843,7 +861,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                 }
               }
             )),
-            Text('seconds')
+            Text('minutes')
           ]),
           RaisedButton(  // Submit button
             color: Constants.highlightColor,
@@ -932,13 +950,13 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
             Text('Watched: '),
             Text('${this._episode.watched}'),
           ]),
-          Row(children: [  // Aired
-            Text('Aired on: '),
+          Row(children: [  // Airing date
+            Text('Airing date: '),
             Text('${this._episode.getAiringDateAndTime().getDateAndTimeString()}'),
           ]),
           Row(children: [  // Duration
             Text('Duration: '),
-            Text((this._episode.getDuration() == null ? '-' : '${this._episode.getDuration()}')),
+            Text((this._episode.getDurationMinutes() == null ? '-' : '${this._episode.getDurationMinutes()}')),
             Text(' minutes')
           ]),
           RaisedButton(  // Remove episode
@@ -993,7 +1011,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
 
     // Initializes form values
     this._episodeName = this._episode.getName();
-    this._episodeDuration = this._episode.getDuration();
+    this._episodeDuration = this._episode.getDurationMinutes();
     this._selectedSeason = this._episode.getParentSeason() == null ? this._seasons[0] : this._episode.getParentSeason();
     this._selectedType = this._episode.getType();
     this._selectedDateAndTime = this._episode.getAiringDateAndTime();
@@ -1122,7 +1140,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                 }
               }
             )),
-            Text('seconds')
+            Text('minutes')
           ]),
           RaisedButton(  // Submit button
             color: Constants.highlightColor,
@@ -1136,7 +1154,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                   this._episode.setName(this._episodeName);
                   this._episode.setType(this._selectedType);
                   this._episode.setAiringDateAndTime(this._selectedDateAndTime);
-                  this._episode.setDuration(this._episodeDuration);
+                  this._episode.setDurationMinutes(this._episodeDuration);
 
                   Utils.saveShowsToJson();
                   Navigator.pop(context);
@@ -1309,15 +1327,38 @@ class Show {
     });
   }
 
-  int getNumberOfSeasons() => this.seasons.length;
+  int getNumberOfSeasons() => this.getSeasons().length;
   // Returns the total number of episodes (show itself and each season)
   int getNumberOfEpisodes(){
-    int totalNumber = this.episodes.length;
+    int totalNumber = this.getEpisodes().length;
     for(Season season in this.seasons){
       totalNumber += season.getNumberOfEpisodes();
     }
 
     return totalNumber;
+  }
+
+  // Returns total duration of all episodes and seasons in the show in hours
+  double getTotalDurationHours(){
+    return (this.getEpisodes().fold(0, (sum, episode) => sum + episode.getDurationMinutes(allowNull: false)) / 60)
+      + this.getSeasons().fold(0, (sum, season) => sum + season.getTotalDurationHours());
+  }
+
+  // Returns the dates of the first and last episodes of the season (e.g. 'yyyy-mm-dd to yyyy-mm-dd')
+  String getAiringPeriod(){
+    List<Episode> episodesWithDate = this.getEpisodes().where((element) => element.getAiringDateAndTime().hasDate()).toList();  // Episodes without a season
+    // All seasons' episodes
+    for(Season season in this.getSeasons()){
+      episodesWithDate.addAll(season.getEpisodes().where((element) => element.getAiringDateAndTime().hasDate()));
+    }
+    episodesWithDate.sort(Comparators.compareEpisodesAiringDateAndTime);
+
+    if(episodesWithDate.isEmpty){  // No episodes with dates
+      return '-';
+    }
+    else{
+      return '${episodesWithDate.first.getAiringDateAndTime().getDateString()} to ${episodesWithDate.last.getAiringDateAndTime().getDateString()}';
+    }
   }
 
   @override
@@ -1371,6 +1412,22 @@ class Season{
 
   // Returns the total number of episodes in the season
   int getNumberOfEpisodes() => this.episodes.length;
+  // Returns the total duration of all episodes in the season in hours.
+  double getTotalDurationHours() => this.getEpisodes().fold(0, (sum, episode) => sum + episode.getDurationMinutes(allowNull: false)) / 60;
+
+  // Returns the dates of the first and last episodes of the season (e.g. 'yyyy-mm-dd to yyyy-mm-dd')
+  String getAiringPeriod(){
+    List<Episode> episodesWithDate = this.getEpisodes().where((element) => element.getAiringDateAndTime().hasDate()).toList();
+    episodesWithDate.sort(Comparators.compareEpisodesAiringDateAndTime);
+
+    if(episodesWithDate.isEmpty){  // No episodes with dates
+      return '-';
+    }
+    else{
+      return '${episodesWithDate.first.getAiringDateAndTime().getDateString()} to ${episodesWithDate.last.getAiringDateAndTime().getDateString()}';
+    }
+  }
+
 
   // Prints number of season and name if it has one (e.g. S01: Season Name)
   String toString() => this.name.isEmpty ? 'S'+this.number.toString() : 'S'+this.number.toString()+': '+this.name;
@@ -1416,8 +1473,8 @@ class Episode{
   DateAndTime getAiringDateAndTime() => this.airingDateAndTime;
   void setAiringDateAndTime(DateAndTime newDateAndTime) => this.airingDateAndTime = newDateAndTime;
 
-  int getDuration() => this.durationMinutes;
-  void setDuration(int newDuration) => this.durationMinutes = newDuration;
+  int getDurationMinutes({bool allowNull=true}) => (this.durationMinutes == null && allowNull == false) ? 0 : this.durationMinutes;
+  void setDurationMinutes(int newDuration) => this.durationMinutes = newDuration;
 
   Show getParentShow() => this.parentShow;
   void setParentShow(Show show) => this.parentShow = show;
@@ -1673,25 +1730,13 @@ class Utils{
     return show.getSeasons().singleWhere((element) => element.getNumber() == number);
   }
 
-  // Adds zeros to the left of a number until it reaches 'numberOfDigits'. Doesn't add anything if it already has at least 'numberOfDigits' digits.
+  // Formats digits to four digits always
   static String padLeadingZeros(var input, int numberOfDigits){
-    var num = input;
-    int inputDigits = 0;
-    int zerosToAdd = 0;
-
-    // Special case for numbers with zero before the decimal separator
-    if(input >= 0 && input < 1){
-      return '0' + input.toString();
-    }
-
-    // Counts number of digits on the input number
-    while(num >= 1){
-      inputDigits += 1;
-      num ~/= 10;
-    }
-
-    zerosToAdd = numberOfDigits - inputDigits;
-    return '0'*zerosToAdd + input.toString();
+    return NumberFormat('0'*numberOfDigits).format(input);
+  }
+  // Formats decimals to two digits always
+  static String truncateDecimals(double input, int numberOfDecimals){
+    return NumberFormat('0.' + '0'*numberOfDecimals).format(input);
   }
 
   // Sets the number for every item in a list in order starting from 'initialNumber'
