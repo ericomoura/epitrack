@@ -810,43 +810,76 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           ]),
           Row(children: [  // Airing date
             Text(this._selectedDateAndTime.hasDate() == false ? 'Airing date: - ' : 'Airing date: ${this._selectedDateAndTime.getDateString()}'),
-            RaisedButton(
-              color: Constants.highlightColor,
-              child: Text('Select date'),
-              onPressed: () async{
-                DateTime date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(Constants.minYear),
-                  lastDate: DateTime(Constants.maxYear)
-                );
-                setState((){
-                  if(date != null){  // If a date was selected
-                    this._selectedDateAndTime.setYear(date.year);
-                    this._selectedDateAndTime.setMonth(date.month);
-                    this._selectedDateAndTime.setDay(date.day);
-                  }
-                });
-              },
+            ButtonTheme(  // Select date button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.calendar_today),
+                onPressed: () async{
+                  DateTime date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(Constants.minYear),
+                    lastDate: DateTime(Constants.maxYear)
+                  );
+                  setState((){
+                    if(date != null){  // If a date was selected
+                      this._selectedDateAndTime.setYear(date.year);
+                      this._selectedDateAndTime.setMonth(date.month);
+                      this._selectedDateAndTime.setDay(date.day);
+                    }
+                  });
+                },
+              )
+            ),
+            ButtonTheme(  // Remove date button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.cancel),
+                onPressed: () {
+                  setState((){
+                    this._selectedDateAndTime.setYear(null);
+                    this._selectedDateAndTime.setMonth(null);
+                    this._selectedDateAndTime.setDay(null);
+                  });
+                },
+              )
             )
           ],),
           Row(children: [  // Airing time
             Text(this._selectedDateAndTime.hasTime() == false ? 'Airing time: - ' : 'Airing time: ${this._selectedDateAndTime.getTimeString()}'),
-            RaisedButton(
-              color: Constants.highlightColor,
-              child: Text('Select time'),
-              onPressed: () async{
-                TimeOfDay time = await showTimePicker(
-                  context: context,
-                  initialTime: TimeOfDay(hour: 0, minute: 0)
-                );
-                setState((){
-                  if(time != null){  // If a time was selected
-                    this._selectedDateAndTime.setHour(time.hour);
-                    this._selectedDateAndTime.setMinute(time.minute);
-                  }
-                });
-              },
+            ButtonTheme(  // Select time button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.access_time),
+                onPressed: () async{
+                  TimeOfDay time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay(hour: 0, minute: 0)
+                  );
+                  setState((){
+                    if(time != null){  // If a time was selected
+                      this._selectedDateAndTime.setHour(time.hour);
+                      this._selectedDateAndTime.setMinute(time.minute);
+                    }
+                  });
+                },
+              )
+            ),
+            ButtonTheme(  // Remove time button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.cancel),
+                onPressed: () {
+                  setState((){
+                    this._selectedDateAndTime.setHour(null);
+                    this._selectedDateAndTime.setMinute(null);
+                  });
+                },
+              )
             )
           ],),
           Row(children: [  // Duration
@@ -956,8 +989,7 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
           ]),
           Row(children: [  // Duration
             Text('Duration: '),
-            Text((this._episode.getDurationMinutes() == null ? '-' : '${this._episode.getDurationMinutes()}')),
-            Text(' minutes')
+            Text((this._episode.getDurationMinutes() == null ? '-' : '${this._episode.getDurationMinutes()} minutes'))
           ]),
           RaisedButton(  // Remove episode
             color: Constants.highlightColor,
@@ -1089,43 +1121,76 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
           ]),
           Row(children: [  // Airing date
             Text(this._selectedDateAndTime.hasDate() == false ? 'Airing date: - ' : 'Airing date: ${_selectedDateAndTime.getDateString()}'),
-            RaisedButton(
-              color: Constants.highlightColor,
-              child: Text('Select date'),
-              onPressed: () async{
-                DateTime date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(Constants.minYear),
-                  lastDate: DateTime(Constants.maxYear)
-                );
-                setState((){
-                  if(date != null){  // If a date was selected
-                    this._selectedDateAndTime.setYear(date.year);
-                    this._selectedDateAndTime.setMonth(date.month);
-                    this._selectedDateAndTime.setDay(date.day);
-                  }
-                });
-              },
+            ButtonTheme(  // Select date button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.calendar_today),
+                onPressed: () async{
+                  DateTime date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(Constants.minYear),
+                    lastDate: DateTime(Constants.maxYear)
+                  );
+                  setState((){
+                    if(date != null){  // If a date was selected
+                      this._selectedDateAndTime.setYear(date.year);
+                      this._selectedDateAndTime.setMonth(date.month);
+                      this._selectedDateAndTime.setDay(date.day);
+                    }
+                  });
+                },
+              )
+            ),
+            ButtonTheme(  // Remove date button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.cancel),
+                onPressed: () {
+                  setState((){
+                    this._selectedDateAndTime.setYear(null);
+                    this._selectedDateAndTime.setMonth(null);
+                    this._selectedDateAndTime.setDay(null);
+                  });
+                },
+              )
             )
           ],),
           Row(children: [  // Airing time
             Text(_selectedDateAndTime.hasTime() == false ? 'Airing time: - ' : 'Airing time: ${_selectedDateAndTime.getTimeString()}'),
-            RaisedButton(
-              color: Constants.highlightColor,
-              child: Text('Select time'),
-              onPressed: () async{
-                TimeOfDay time = await showTimePicker(
-                  context: context,
-                  initialTime: TimeOfDay(hour: 0, minute: 0)
-                );
-                setState((){
-                  if(time != null){  // If a time was selected
-                    this._selectedDateAndTime.setHour(time.hour);
-                    this._selectedDateAndTime.setMinute(time.minute);
-                  }
-                });
-              },
+            ButtonTheme(  // Select time button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.access_time),
+                onPressed: () async{
+                  TimeOfDay time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay(hour: 0, minute: 0)
+                  );
+                  setState((){
+                    if(time != null){  // If a time was selected
+                      this._selectedDateAndTime.setHour(time.hour);
+                      this._selectedDateAndTime.setMinute(time.minute);
+                    }
+                  });
+                },
+              )
+            ),
+            ButtonTheme(  // Remove time button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.cancel),
+                onPressed: () {
+                  setState((){
+                    this._selectedDateAndTime.setHour(null);
+                    this._selectedDateAndTime.setMinute(null);
+                  });
+                },
+              )
             )
           ],),
           Row(children: [  // Duration
@@ -1591,9 +1656,9 @@ class Constants{
   static double appbarFontSize = 17;
 
   // Theme
-  static const Color mainColor = bluegrey;
-  static const Color backgroundColor = bluegreyBackground;
-  static const Color highlightColor = bluegreyHighlight;
+  static const Color mainColor = deeppurple;
+  static const Color backgroundColor = deeppurpleBackground;
+  static const Color highlightColor = deeppurpleHighlight;
 
   // Colors
   static const Color red = Colors.red;  // red
@@ -1614,6 +1679,9 @@ class Constants{
   static const Color orange = Colors.orange;  // orange
   static const Color orangeBackground = Color(4294959282);  // orange[100]
   static const Color orangeHighlight = Color(4294954112);  // orange[200]
+  static const Color deeppurple = Colors.deepPurple;  // deepPurple
+  static const Color deeppurpleBackground = Color(4291937513);  //deepPurple[100]
+  static const Color deeppurpleHighlight = Color(4289961435);  // deepPurple[200]
 
 }
 
