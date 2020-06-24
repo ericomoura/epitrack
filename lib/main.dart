@@ -141,6 +141,7 @@ class NewShowScreen extends StatefulWidget{
 class _NewShowScreenState extends State<NewShowScreen>{
   final _formKey = GlobalKey<FormState>();
   String _newShowName = '';
+  String _newShowNotes;
 
   @override
   Widget build(BuildContext context) {
@@ -160,23 +161,32 @@ class _NewShowScreenState extends State<NewShowScreen>{
       key: this._formKey,
       child: Column(
         children: <Widget>[
-          Row( children:[
-            Text('Name: '),
+          Row( children:[  // Name
+            Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
-              validator: Validators.showNameValidator,
+              validator: Validators.newShowName,
               onSaved: (String value) {
                 this._newShowName = value;
-              },
-            )),
+              }
+            ))
           ]),
-          RaisedButton(
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              onSaved: (String value) {
+                this._newShowNotes = value;
+              },
+            ))
+          ]),
+          RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Add show'),
             onPressed: () {
               if (_formKey.currentState.validate()) {  //Form is okay, add show
                 _formKey.currentState.save();
 
-                EpitrackApp.showsList.add(Show(this._newShowName));
+                EpitrackApp.showsList.add(Show(this._newShowName, notes: this._newShowNotes));
+
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
               } else {  //Form isn't okay
@@ -253,25 +263,29 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
       body: Column(
         children: [
           Row(children:[  // Name
-            Text('Name: '),
-            Text('${this._show.getName()}'),
+            Text('Name: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: Text('${this._show.getName()}')),
           ]),
           Row(children: [  // Number of seasons
-            Text('Number of seasons: '),
+            Text('Number of seasons: ', style: Constants.textStyleLabels),
             Text('${this._show.getNumberOfSeasons()}'),
           ]),
           Row(children: [  // Number of episodes
-            Text('Number of episodes: '),
+            Text('Number of episodes: ', style: Constants.textStyleLabels),
             Text('${this._show.getNumberOfEpisodes()}'),
           ]),
           Row(children: [  // Total duration
-            Text('Total duration: '),
+            Text('Total duration: ', style: Constants.textStyleLabels),
             Text('${Utils.truncateDecimals(this._show.getTotalDurationHours(), 2)}'),
             Text(' hours')
           ]),
-          Row(children: [
-            Text('Airing period: '),
+          Row(children: [  // Airing period
+            Text('Airing period: ', style: Constants.textStyleLabels),
             Text('${this._show.getAiringPeriod()}')
+          ]),
+          Row(children:[  // Name
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: Text('${this._show.getNotes()}')),
           ]),
           RaisedButton(  // Remove show button
             color: Constants.highlightColor,
@@ -454,12 +468,15 @@ class EditShowScreen extends StatefulWidget{
 }
 class _EditShowScreenState extends State<EditShowScreen>{
   final Show _show;
-
   final _formKey = GlobalKey<FormState>();
+
   String _showName;
+  String _showNotes;
 
   _EditShowScreenState(this._show){
+    // Initializes form values
     this._showName = this._show.getName();
+    this._showNotes = this._show.getNotes();
   }
 
   @override
@@ -467,7 +484,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${Constants.appbarPrefix}Editing $this._show',
+          '${Constants.appbarPrefix}Editing $this._showName',
           style: TextStyle(fontSize: Constants.appbarFontSize)
         )
       ),
@@ -480,13 +497,22 @@ class _EditShowScreenState extends State<EditShowScreen>{
       key: this._formKey,
       child: Column(
         children: <Widget>[
-          Row(children:[
-            Text('Name: '),
+          Row(children:[  // Name
+            Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
               initialValue: this._showName,
-              validator: Validators.showNameValidator,
+              validator: Validators.editShowName,
               onSaved: (String value) {
                 this._showName = value;
+              },
+            )),
+          ]),
+          Row(children:[  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              initialValue: this._showNotes,
+              onSaved: (String value) {
+                this._showNotes = value;
               },
             )),
           ]),
@@ -498,6 +524,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
                 this._formKey.currentState.save();
 
                 this._show.setName(this._showName);
+                this._show.setNotes(this._showNotes);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -524,7 +551,9 @@ class NewSeasonScreen extends StatefulWidget {
 class _NewSeasonScreenState extends State<NewSeasonScreen> {
   final Show _show;
   final _formKey = GlobalKey<FormState>();
+
   String _newSeasonName = '';
+  String _newSeasonNotes;
 
   _NewSeasonScreenState(this._show);
 
@@ -533,7 +562,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Epitrack | New season',
+          '${Constants.appbarPrefix}New season',
           style: TextStyle(fontSize: Constants.appbarFontSize)
         )
       ),
@@ -546,20 +575,32 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
       key: this._formKey,
       child: Column(
         children: <Widget>[
-          TextFormField(
-            decoration: InputDecoration(labelText: 'Name'),
-            onSaved: (String value) {
-              this._newSeasonName = value;
-            },
-          ),
-          RaisedButton(
+          Row(children: [  // Name
+            Text('Name: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Name'),
+              onSaved: (String value) {
+                this._newSeasonName = value;
+              },
+            ))
+          ]),
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Notes'),
+              onSaved: (String value) {
+                this._newSeasonNotes = value;
+              },
+            ))
+          ]),
+          RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Add season'),
             onPressed: () {
               if (this._formKey.currentState.validate()) {  // Form is okay, add season
                 this._formKey.currentState.save();
                 
-                this._show.addSeason(name: this._newSeasonName);
+                this._show.addSeason(name: this._newSeasonName, notes: this._newSeasonNotes);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -613,25 +654,29 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
       body: Column(
         children: [
           Row(children: [  // Name
-            Text('Season name: '),
-            Text('${this._season.getName()}'),
+            Text('Name: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: Text('${this._season.getName()}')),
           ]),
           Row(children: [  // Number
-            Text('Season number: '),
+            Text('Season number: ', style: Constants.textStyleLabels),
             Text('${this._season.getNumber()}'),
           ]),
           Row(children: [  // Number of episodes
-            Text('Number of episodes: '),
+            Text('Number of episodes: ', style: Constants.textStyleLabels),
             Text('${this._season.getNumberOfEpisodes()}'),
           ]),
-          Row(children: [
-            Text('Total duration: '),
+          Row(children: [  // Duration
+            Text('Total duration: ', style: Constants.textStyleLabels),
             Text('${Utils.truncateDecimals(this._season.getTotalDurationHours(), 2)}'),
             Text(' hours')
           ]),
-          Row(children: [
-            Text('Airing period: '),
+          Row(children: [  // Airing period
+            Text('Airing period: ', style: Constants.textStyleLabels),
             Text('${this._season.getAiringPeriod()}')
+          ]),
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: Text('${this._season.getNotes()}')),
           ]),
           RaisedButton(  // Remove season button
             color: Constants.highlightColor,
@@ -661,12 +706,15 @@ class EditSeasonScreen extends StatefulWidget{
 }
 class _EditSeasonScreenState extends State<EditSeasonScreen>{
   final Season _season;
-
   final _formKey = GlobalKey<FormState>();
+
   String _seasonName;
+  String _seasonNotes;
 
   _EditSeasonScreenState(this._season){
+    // Initializes form values
     this._seasonName = this._season.getName();
+    this._seasonNotes = this._season.getNotes();
   }
 
   @override
@@ -687,8 +735,8 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
       key: this._formKey,
       child: Column(
         children: <Widget>[
-          Row(children:[
-            Text('Name: '),
+          Row(children:[  // Name
+            Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
               initialValue: this._season.getName(),
               onSaved: (String value) {
@@ -696,13 +744,24 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
               },
             ))
           ]),
-          RaisedButton(
+          Row(children:[  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              initialValue: this._season.getNotes(),
+              onSaved: (String value) {
+                this._seasonNotes = value;
+              },
+            ))
+          ]),
+          RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Save changes'),
             onPressed: () {
               if (this._formKey.currentState.validate()) {  // Form is okay, add season
                 this._formKey.currentState.save();
+
                 this._season.setName(this._seasonName);
+                this._season.setNotes(this._seasonNotes);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -736,6 +795,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   Season _selectedSeason;  // Season currently selected in the dropdown menu
   String _selectedType;  // Episode type currently selected in the dropdown menu
   DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
+  String _newEpisodeNotes = '';
 
   _NewEpisodeScreenState(this._show){
     // Builds list of seasons
@@ -764,7 +824,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
       child: SingleChildScrollView(child: Column(
         children: <Widget>[
           Row(children: [  // Episode name
-            Text('Name: '),
+            Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(  // Episode name text box
               decoration: InputDecoration(labelText: 'Name'),   
               onSaved: (String value){
@@ -773,7 +833,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ))
           ]), 
           Row(children: [  // Season
-            Text('Season: '),
+            Text('Season: ', style: Constants.textStyleLabels),
             DropdownButton(  // Season dropdown
               hint: Text('Select a season'),
               value: this._selectedSeason,
@@ -791,7 +851,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ),
           ]),
           Row(children: [  // Episode type
-            Text('Type: '),
+            Text('Type: ', style: Constants.textStyleLabels),
             DropdownButton(  // Episode type dropdown
               hint: Text('Select an episode type'),
               value: this._selectedType,
@@ -809,7 +869,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ),
           ]),
           Row(children: [  // Airing date
-            Text(this._selectedDateAndTime.hasDate() == false ? 'Airing date: - ' : 'Airing date: ${this._selectedDateAndTime.getDateString()}'),
+            Text('Airing date: ', style: Constants.textStyleLabels),
+            Text(this._selectedDateAndTime.hasDate() == false ? '-' : '${this._selectedDateAndTime.getDateString()}'),
             ButtonTheme(  // Select date button
               minWidth: 0,
               child: RaisedButton(
@@ -848,7 +909,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             )
           ],),
           Row(children: [  // Airing time
-            Text(this._selectedDateAndTime.hasTime() == false ? 'Airing time: - ' : 'Airing time: ${this._selectedDateAndTime.getTimeString()}'),
+            Text('Airing time: ', style: Constants.textStyleLabels),
+            Text(this._selectedDateAndTime.hasTime() == false ? '-' : '${this._selectedDateAndTime.getTimeString()}'),
             ButtonTheme(  // Select time button
               minWidth: 0,
               child: RaisedButton(
@@ -883,7 +945,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             )
           ],),
           Row(children: [  // Duration
-            Text('Duration: '),
+            Text('Duration: ', style: Constants.textStyleLabels),
             Container(width: 100, child: TextFormField(
               decoration: InputDecoration(labelText: 'Duration'),
               keyboardType: TextInputType.number,
@@ -895,6 +957,17 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
               }
             )),
             Text('minutes')
+          ]),
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Notes'),
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              onSaved: (String value){
+                this._newEpisodeNotes = value;
+              }
+            ))
           ]),
           RaisedButton(  // Submit button
             color: Constants.highlightColor,
@@ -908,7 +981,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                   season: this._selectedSeason, 
                   type: this._selectedType == null ? Constants.EPISODETYPES['Episode'] : this._selectedType,  // Defaults to type 'Episode'
                   airingDateAndTime: this._selectedDateAndTime,
-                  durationMinutes: this._newEpisodeDuration
+                  durationMinutes: this._newEpisodeDuration,
+                  notes: this._newEpisodeNotes
                 );
 
                 Utils.saveShowsToJson();  // Saves to persistent storage
@@ -968,28 +1042,32 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
       body: Column(
         children: [
           Row(children: [  // Name
-            Text('Name: '),
-            Text('${this._episode.getName()}'),
+            Text('Name: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: Text('${this._episode.getName()}')),
           ]),
           Row(children: [  // Number
-            Text('Number: '),
+            Text('Number: ', style: Constants.textStyleLabels),
             Text('${this._episode.getNumber()}'),
           ]),
           Row(children: [  // Type
-            Text('Type: '),
+            Text('Type: ', style: Constants.textStyleLabels),
             Text(Constants.EPISODETYPES.keys.singleWhere((key) => Constants.EPISODETYPES[key] == this._episode.getType())),
           ]),
           Row(children: [  // Watched
-            Text('Watched: '),
+            Text('Watched: ', style: Constants.textStyleLabels),
             Text('${this._episode.watched}'),
           ]),
           Row(children: [  // Airing date
-            Text('Airing date: '),
+            Text('Airing date: ', style: Constants.textStyleLabels),
             Text('${this._episode.getAiringDateAndTime().getDateAndTimeString()}'),
           ]),
           Row(children: [  // Duration
-            Text('Duration: '),
+            Text('Duration: ', style: Constants.textStyleLabels),
             Text((this._episode.getDurationMinutes() == null ? '-' : '${this._episode.getDurationMinutes()} minutes'))
+          ]),
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: Text(this._episode.getNotes()))
           ]),
           RaisedButton(  // Remove episode
             color: Constants.highlightColor,
@@ -1033,6 +1111,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
   Season _selectedSeason;  // Season currently selected in the dropdown menu
   String _selectedType;  // Episode type currently selected in the dropdown menu
   DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
+  String _episodeNotes;
 
   _EditEpisodeScreenState(this._episode){
     // Builds list of all seasons
@@ -1047,6 +1126,9 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
     this._selectedSeason = this._episode.getParentSeason() == null ? this._seasons[0] : this._episode.getParentSeason();
     this._selectedType = this._episode.getType();
     this._selectedDateAndTime = this._episode.getAiringDateAndTime();
+    this._episodeNotes = this._episode.getNotes();
+
+    print('aaa'+this._episodeNotes); //debug
 
   }
 
@@ -1075,7 +1157,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
       child: SingleChildScrollView(child: Column(
         children: <Widget>[
           Row(children: [  // Episode name
-            Text('Name: '),
+            Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(  // Episode name text box
               initialValue: this._episodeName,  
               onSaved: (String value){
@@ -1084,7 +1166,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             ))
           ]), 
           Row(children: [  // Season
-            Text('Season: '),
+            Text('Season: ', style: Constants.textStyleLabels),
             DropdownButton(  // Season dropdown
               hint: Text('Select a season'),
               value: this._selectedSeason,
@@ -1102,7 +1184,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             ),
           ]),
           Row(children: [  // Episode type
-            Text('Type: '),
+            Text('Type: ', style: Constants.textStyleLabels),
             DropdownButton(  // Episode type dropdown
               hint: Text('Select an episode type'),
               value: this._selectedType,
@@ -1120,7 +1202,8 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             ),
           ]),
           Row(children: [  // Airing date
-            Text(this._selectedDateAndTime.hasDate() == false ? 'Airing date: - ' : 'Airing date: ${_selectedDateAndTime.getDateString()}'),
+            Text('Airing date: ', style: Constants.textStyleLabels),
+            Text(this._selectedDateAndTime.hasDate() == false ? '-' : '${_selectedDateAndTime.getDateString()}'),
             ButtonTheme(  // Select date button
               minWidth: 0,
               child: RaisedButton(
@@ -1159,7 +1242,8 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             )
           ],),
           Row(children: [  // Airing time
-            Text(_selectedDateAndTime.hasTime() == false ? 'Airing time: - ' : 'Airing time: ${_selectedDateAndTime.getTimeString()}'),
+            Text('Airing time: ', style: Constants.textStyleLabels),
+            Text(_selectedDateAndTime.hasTime() == false ? '-' : '${_selectedDateAndTime.getTimeString()}'),
             ButtonTheme(  // Select time button
               minWidth: 0,
               child: RaisedButton(
@@ -1194,7 +1278,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             )
           ],),
           Row(children: [  // Duration
-            Text('Duration: '),
+            Text('Duration: ', style: Constants.textStyleLabels),
             Container(width: 100, child: TextFormField(
               initialValue: this._episodeDuration == null ? '' : this._episodeDuration.toString(),
               keyboardType: TextInputType.number,
@@ -1206,6 +1290,18 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
               }
             )),
             Text('minutes')
+          ]),
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Notes'),
+              keyboardType: TextInputType.multiline,
+              initialValue: _episodeNotes,
+              maxLines: null,
+              onSaved: (String value){
+                this._episodeNotes = value;
+              }
+            ))
           ]),
           RaisedButton(  // Submit button
             color: Constants.highlightColor,
@@ -1220,6 +1316,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                   this._episode.setType(this._selectedType);
                   this._episode.setAiringDateAndTime(this._selectedDateAndTime);
                   this._episode.setDurationMinutes(this._episodeDuration);
+                  this._episode.setNotes(this._episodeNotes);
 
                   Utils.saveShowsToJson();
                   Navigator.pop(context);
@@ -1241,7 +1338,8 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                     type: this._selectedType == null ? Constants.EPISODETYPES['Episode'] : this._selectedType,  // Defaults to type 'Episode'
                     watched: this._episode.getWatched(),
                     airingDateAndTime: this._selectedDateAndTime,
-                    durationMinutes: this._episodeDuration
+                    durationMinutes: this._episodeDuration,
+                    notes: this._episodeNotes
                   );
 
                   Utils.saveShowsToJson();
@@ -1332,15 +1430,19 @@ class Show {
   String name;
   List<Season> seasons = List<Season>();
   List<Episode> episodes = List<Episode>();  // Episodes that don't have a season (e.g. specials, OVAs, etc.)
+  String notes;
 
-  Show(this.name);
+  Show(this.name, {this.notes});
 
   String getName() => this.name;
   void setName(String newName) => this.name = newName;
 
+  String getNotes() => this.notes;
+  void setNotes(String newNote) => this.notes = newNote;
+
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
-  void addEpisode({String name, Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes}){
+  void addEpisode({String name, Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int nextEpisodeNumber;
       Iterable<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} );
@@ -1358,6 +1460,7 @@ class Show {
         watched: watched, 
         airingDateAndTime: airingDateAndTime, 
         durationMinutes: durationMinutes,
+        notes: notes
       ));
     }
     else{  // Calls the season's addEpisode() function
@@ -1366,14 +1469,15 @@ class Show {
         type: type,
         watched: watched,
         airingDateAndTime: airingDateAndTime,
-        durationMinutes: durationMinutes
+        durationMinutes: durationMinutes,
+        notes: notes
       );
     }
   }
 
   List<Season> getSeasons() => this.seasons;
   // Adds a new season using the appropriate season number
-  void addSeason({String name=""}){
+  void addSeason({String name="", String notes}){
     int nextSeasonNumber;
     
     if(this.seasons.isEmpty){
@@ -1383,7 +1487,7 @@ class Show {
       nextSeasonNumber = this.seasons.last.getNumber() + 1;
     }
 
-    this.seasons.add(Season(nextSeasonNumber, name, this));
+    this.seasons.add(Season(nextSeasonNumber, name, this, notes: notes));
   }
   // Returns the season with the given name
   Season getSeasonByName(String name){
@@ -1441,8 +1545,9 @@ class Season{
   List<Episode> episodes = List<Episode>();
   @JsonKey(toJson: Utils.parentShowToJson)
   Show parentShow;  // Reference to the show which contains this season
+  String notes;
 
-  Season(this.number, this.name, this.parentShow);
+  Season(this.number, this.name, this.parentShow, {this.notes=''});
 
   int getNumber() => this.number;
   void setNumber(int number) => this.number = number;
@@ -1453,9 +1558,12 @@ class Season{
   Show getParentShow() => this.parentShow;
   void setParentShow(Show show) => this.parentShow = show;
 
+  String getNotes() => this.notes;
+  void setNotes(String newNote) => this.notes = newNote;
+
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate season number
-  void addEpisode({String name, String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes}){
+  void addEpisode({String name, String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes}){
     int nextEpisodeNumber;
     List<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} ).toList();
     
@@ -1471,7 +1579,8 @@ class Season{
       type: type, 
       watched: watched, 
       airingDateAndTime: airingDateAndTime, 
-      durationMinutes: durationMinutes
+      durationMinutes: durationMinutes,
+      notes: notes
     ));
   }
 
@@ -1514,9 +1623,9 @@ class Episode{
   Show parentShow;  // Reference to the show which contains this episode
   @JsonKey(toJson: Utils.parentSeasonToJson)
   Season parentSeason;  // Reference to the season which contains this episode. If null, episode has no season.
+  String notes;
 
-
-  Episode(this.number, Show parentShow, Season parentSeason, {this.name="", this.type, this.watched=false, this.airingDateAndTime, this.durationMinutes}){
+  Episode(this.number, Show parentShow, Season parentSeason, {this.name="", this.type, this.watched=false, this.airingDateAndTime, this.durationMinutes, this.notes=""}){
     this.setParentShow(parentShow);
     this.setParentSeason(parentSeason);
     this.type = this.type == null ? Constants.EPISODETYPES['Episode'] : this.type;
@@ -1546,6 +1655,9 @@ class Episode{
 
   Season getParentSeason() => this.parentSeason;
   void setParentSeason(Season season) => this.parentSeason = season;
+
+  String getNotes() => this.notes;
+  void setNotes(String newNote) => this.notes = newNote;
 
   String toString() => (this.getParentSeason() == null ? '': 'S${this.getParentSeason().getNumber()}') 
     + 'E${this.getNumber()}' 
@@ -1654,6 +1766,9 @@ class Constants{
   
   // Fonts
   static double appbarFontSize = 17;
+
+  // Text style
+  static TextStyle textStyleLabels = TextStyle(fontWeight: FontWeight.bold);
 
   // Theme
   static const Color mainColor = deeppurple;
@@ -1819,13 +1934,29 @@ class Utils{
 }
 
 class Validators{
-  static String showNameValidator(String value){
+  static String newShowName(String value){
     // Tests if name is empty
     if (value.isEmpty) {
       return "Name can't be empty";
     }
 
     // Tests if there's already a show with the same name
+    for(Show show in EpitrackApp.showsList){
+      if(show.getName() == value){
+        return "There's already a show with that name";
+      }
+    }
+
+    return null;  // Name is okay
+  }
+
+  static String editShowName(String value){
+    // Tests if name is empty
+    if (value.isEmpty) {
+      return "Name can't be empty";
+    }
+
+    // Tests if there's already another show with the same name
     for(Show show in EpitrackApp.showsList){
       if(show.getName() == value){
         return "There's already a show with that name";

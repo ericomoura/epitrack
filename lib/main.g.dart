@@ -9,6 +9,7 @@ part of 'main.dart';
 Show _$ShowFromJson(Map<String, dynamic> json) {
   return Show(
     json['name'] as String,
+    notes: json['notes'] as String,
   )
     ..seasons = (json['seasons'] as List)
         ?.map((e) =>
@@ -24,6 +25,7 @@ Map<String, dynamic> _$ShowToJson(Show instance) => <String, dynamic>{
       'name': instance.name,
       'seasons': instance.seasons?.map((e) => e?.toJson())?.toList(),
       'episodes': instance.episodes?.map((e) => e?.toJson())?.toList(),
+      'notes': instance.notes,
     };
 
 Season _$SeasonFromJson(Map<String, dynamic> json) {
@@ -33,6 +35,7 @@ Season _$SeasonFromJson(Map<String, dynamic> json) {
     json['parentShow'] == null
         ? null
         : Show.fromJson(json['parentShow'] as Map<String, dynamic>),
+    notes: json['notes'] as String,
   )..episodes = (json['episodes'] as List)
       ?.map(
           (e) => e == null ? null : Episode.fromJson(e as Map<String, dynamic>))
@@ -44,6 +47,7 @@ Map<String, dynamic> _$SeasonToJson(Season instance) => <String, dynamic>{
       'name': instance.name,
       'episodes': instance.episodes?.map((e) => e?.toJson())?.toList(),
       'parentShow': Utils.parentShowToJson(instance.parentShow),
+      'notes': instance.notes,
     };
 
 Episode _$EpisodeFromJson(Map<String, dynamic> json) {
@@ -63,6 +67,7 @@ Episode _$EpisodeFromJson(Map<String, dynamic> json) {
         : DateAndTime.fromJson(
             json['airingDateAndTime'] as Map<String, dynamic>),
     durationMinutes: json['durationMinutes'] as int,
+    notes: json['notes'] as String,
   );
 }
 
@@ -75,6 +80,7 @@ Map<String, dynamic> _$EpisodeToJson(Episode instance) => <String, dynamic>{
       'durationMinutes': instance.durationMinutes,
       'parentShow': Utils.parentShowToJson(instance.parentShow),
       'parentSeason': Utils.parentSeasonToJson(instance.parentSeason),
+      'notes': instance.notes,
     };
 
 DateAndTime _$DateAndTimeFromJson(Map<String, dynamic> json) {
