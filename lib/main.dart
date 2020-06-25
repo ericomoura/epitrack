@@ -173,6 +173,8 @@ class _NewShowScreenState extends State<NewShowScreen>{
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
               onSaved: (String value) {
                 this._newShowNotes = value;
               },
@@ -283,7 +285,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
             Text('Airing period: ', style: Constants.textStyleLabels),
             Text('${this._show.getAiringPeriod()}')
           ]),
-          Row(children:[  // Name
+          Row(children:[  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: Text('${this._show.getNotes()}')),
           ]),
@@ -510,6 +512,8 @@ class _EditShowScreenState extends State<EditShowScreen>{
           Row(children:[  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
               initialValue: this._showNotes,
               onSaved: (String value) {
                 this._showNotes = value;
@@ -588,6 +592,8 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
               decoration: InputDecoration(labelText: 'Notes'),
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
               onSaved: (String value) {
                 this._newSeasonNotes = value;
               },
@@ -747,6 +753,8 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
           Row(children:[  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
               initialValue: this._season.getNotes(),
               onSaved: (String value) {
                 this._seasonNotes = value;
@@ -787,7 +795,8 @@ class NewEpisodeScreen extends StatefulWidget{
 }
 class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   final Show _show;
-  final _formKey = GlobalKey<FormState>();
+  final _singleFormKey = GlobalKey<FormState>();
+  final _batchFormKey = GlobalKey<FormState>();
 
   List<Season> _seasons = List<Season>();  // All seasons, including "no season"
   String _newEpisodeName;
@@ -796,6 +805,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   String _selectedType;  // Episode type currently selected in the dropdown menu
   DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
   String _newEpisodeNotes = '';
+  int _numberOfEpisodes = 0;
+  int _episodeInterval = 0;  // Days between episodes in a batch
 
   _NewEpisodeScreenState(this._show){
     // Builds list of seasons
@@ -807,20 +818,36 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
 
   @override
   Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          '${Constants.appbarPrefix}New episode',
-          style: TextStyle(fontSize: Constants.appbarFontSize)
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold( 
+        appBar: AppBar(
+          title: Text(
+            '${Constants.appbarPrefix}New episode',
+            style: TextStyle(fontSize: Constants.appbarFontSize)
+          ),
+          bottom: TabBar(
+            tabs: [
+              //Tab headers
+              Tab(text: 'Single'),
+              Tab(text: 'Batch'),
+            ]
+          )
+        ),
+        body: TabBarView(
+          children: [
+            //Tab content
+            _buildNewEpisodeForm(),
+            _buildNewBatchForm(),
+          ],
         )
-      ),
-      body: _buildNewEpisodeForm()
+      )
     );
   }
 
   Widget _buildNewEpisodeForm(){
     return Form(
-      key: this._formKey,
+      key: this._singleFormKey,
       child: SingleChildScrollView(child: Column(
         children: <Widget>[
           Row(children: [  // Episode name
@@ -973,8 +1000,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             color: Constants.highlightColor,
             child: Text('Add episode'),
             onPressed: (){
-              if(this._formKey.currentState.validate()){  // Form is okay, add episode
-                this._formKey.currentState.save();
+              if(this._singleFormKey.currentState.validate()){  // Form is okay, add episode
+                this._singleFormKey.currentState.save();
 
                 this._show.addEpisode(
                   name: this._newEpisodeName, 
@@ -996,6 +1023,225 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
         ]
       )
     ));
+  }
+
+  Widget _buildNewBatchForm(){
+    return Form(
+      key: this._batchFormKey,
+      child: SingleChildScrollView(child: Column(
+        children: <Widget>[
+          Row(children: [  // Number of episodes
+            Text('Number of episodes: ', style: Constants.textStyleLabels),
+            Container(width: 100, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Number'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
+              initialValue: this._numberOfEpisodes.toString(),
+              onSaved: (String value){
+                this._numberOfEpisodes = int.parse(value);
+              }
+            ))
+          ]),
+          Row(children: [  // Name
+            Text('Names: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Names'),   
+              onSaved: (String value){
+                this._newEpisodeName = value;
+              },
+            ))
+          ]),
+          Row(children: [  // Season
+            Text('Season: ', style: Constants.textStyleLabels),
+            DropdownButton(  // Season dropdown
+              hint: Text('Select a season'),
+              value: this._selectedSeason,
+              onChanged: (newValue){
+                setState((){
+                  this._selectedSeason = newValue;
+                });
+              },
+              items: this._seasons.map((season){
+                return DropdownMenuItem(
+                  child: new Text(season.getNumber() == 0 ? season.getName() : season.toString()),  // Returns only name for season 0 (no season)
+                  value: season
+                );
+              }).toList()
+            ),
+          ]),
+          Row(children: [  // Episode type
+            Text('Type: ', style: Constants.textStyleLabels),
+            DropdownButton(  // Episode type dropdown
+              hint: Text('Select an episode type'),
+              value: this._selectedType,
+              onChanged: (newValue){
+                setState((){
+                  this._selectedType = newValue;
+                });
+              },
+              items: Constants.EPISODETYPES.keys.map((type){
+                return DropdownMenuItem(
+                  child: new Text(type),
+                  value: Constants.EPISODETYPES[type]
+                );
+              }).toList()
+            ),
+          ]),
+          Row(children: [  // Airing date
+            Text('Starts airing on: ', style: Constants.textStyleLabels),
+            Text(this._selectedDateAndTime.hasDate() == false ? '-' : '${this._selectedDateAndTime.getDateString()}'),
+            ButtonTheme(  // Select date button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.calendar_today),
+                onPressed: () async{
+                  DateTime date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(Constants.minYear),
+                    lastDate: DateTime(Constants.maxYear)
+                  );
+                  setState((){
+                    if(date != null){  // If a date was selected
+                      this._selectedDateAndTime.setYear(date.year);
+                      this._selectedDateAndTime.setMonth(date.month);
+                      this._selectedDateAndTime.setDay(date.day);
+                    }
+                  });
+                },
+              )
+            ),
+            ButtonTheme(  // Remove date button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.cancel),
+                onPressed: () {
+                  setState((){
+                    this._selectedDateAndTime.setYear(null);
+                    this._selectedDateAndTime.setMonth(null);
+                    this._selectedDateAndTime.setDay(null);
+                  });
+                },
+              )
+            )
+          ],),
+          Row(children: [  // Airing time
+            Text('Airing time: ', style: Constants.textStyleLabels),
+            Text(this._selectedDateAndTime.hasTime() == false ? '-' : '${this._selectedDateAndTime.getTimeString()}'),
+            ButtonTheme(  // Select time button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.access_time),
+                onPressed: () async{
+                  TimeOfDay time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay(hour: 0, minute: 0)
+                  );
+                  setState((){
+                    if(time != null){  // If a time was selected
+                      this._selectedDateAndTime.setHour(time.hour);
+                      this._selectedDateAndTime.setMinute(time.minute);
+                    }
+                  });
+                },
+              )
+            ),
+            ButtonTheme(  // Remove time button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.cancel),
+                onPressed: () {
+                  setState((){
+                    this._selectedDateAndTime.setHour(null);
+                    this._selectedDateAndTime.setMinute(null);
+                  });
+                },
+              )
+            )
+          ],),
+          Row(children: [  // Episode interval
+            Text('Episode every: ', style: Constants.textStyleLabels),
+            Container(width: 100, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Interval'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
+              initialValue: this._episodeInterval.toString(),
+              onSaved: (String value){
+                if(value.isNotEmpty){
+                  this._episodeInterval = int.parse(value);
+                }
+              }
+            )),
+            Text('days')
+          ]),
+          Row(children: [  // Duration
+            Text('Duration: ', style: Constants.textStyleLabels),
+            Container(width: 100, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Duration'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
+              onSaved: (String value){
+                if(value != ''){
+                  this._newEpisodeDuration = int.parse(value);
+                }
+              }
+            )),
+            Text('minutes')
+          ]),
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Notes'),
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              onSaved: (String value){
+                this._newEpisodeNotes = value;
+              }
+            ))
+          ]),
+          RaisedButton(  // Submit button
+            color: Constants.highlightColor,
+            child: Text('Add episodes'),
+            onPressed: (){
+              if(this._batchFormKey.currentState.validate()){  // Form is okay, add episode
+                this._batchFormKey.currentState.save();
+
+                DateAndTime currentAiringDate = _selectedDateAndTime;  // Date that'll be incremented
+                for(int i = 0; i < this._numberOfEpisodes; i++){
+                  print(i);  //debug
+                  this._show.addEpisode(
+                    name: this._newEpisodeName,
+                    season: this._selectedSeason,
+                    type: this._selectedType,
+                    airingDateAndTime: DateAndTime(
+                      year: currentAiringDate.year,
+                      month: currentAiringDate.month,
+                      day: currentAiringDate.day,
+                      hour: currentAiringDate.hour,
+                      minute: currentAiringDate.minute
+                    ),
+                    durationMinutes: this._newEpisodeDuration,
+                    notes: this._newEpisodeNotes
+                  );
+
+                  currentAiringDate.addTime(this._episodeInterval, 0, 0);
+                }
+
+                Utils.saveShowsToJson();  // Saves to persistent storage
+                Navigator.pop(context);
+              }
+              else{  // Form isn't okay
+                print('Error adding episode!');
+              }
+            },
+          )
+        ],
+      ))
+    );
   }
 
 }
@@ -1127,9 +1373,6 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
     this._selectedType = this._episode.getType();
     this._selectedDateAndTime = this._episode.getAiringDateAndTime();
     this._episodeNotes = this._episode.getNotes();
-
-    print('aaa'+this._episodeNotes); //debug
-
   }
 
   @override
@@ -1296,8 +1539,8 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             Container(width: 300, child: TextFormField(
               decoration: InputDecoration(labelText: 'Notes'),
               keyboardType: TextInputType.multiline,
-              initialValue: _episodeNotes,
               maxLines: null,
+              initialValue: _episodeNotes,
               onSaved: (String value){
                 this._episodeNotes = value;
               }
@@ -1445,7 +1688,7 @@ class Show {
   void addEpisode({String name, Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int nextEpisodeNumber;
-      Iterable<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} );
+      Iterable<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == (type ==  null ? 'E' : type);} );
 
       if(sameTypeEpisodes.isEmpty){
         nextEpisodeNumber = 1;
@@ -1735,6 +1978,31 @@ class DateAndTime {
     }
     else{  // Doesn't have a time
       return null;
+    }
+  }
+
+  // Adds the time specified. Won't add days if it has no date and won't add hours/minutes if it has no time.
+  void addTime(int days, int hours, int minutes){
+    DateTime dateTimeObject = this.getDateTimeObject();
+    if(dateTimeObject != null){
+      // Adds time and days
+      if(this.hasTime()){ 
+        dateTimeObject = dateTimeObject.add(Duration(hours: hours, minutes: minutes));
+      }
+      if(this.hasDate()){
+        dateTimeObject = dateTimeObject.add(Duration(days: days));
+      }
+
+      // Updates object
+      if(this.hasTime()){
+        this.setHour(dateTimeObject.hour);
+        this.setMinute(dateTimeObject.minute);
+      }
+      if(this.hasDate()){
+        this.setYear(dateTimeObject.year);
+        this.setMonth(dateTimeObject.month);
+        this.setDay(dateTimeObject.day);
+      }
     }
   }
 
