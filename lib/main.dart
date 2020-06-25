@@ -1660,7 +1660,7 @@ class Episode{
   void setNotes(String newNote) => this.notes = newNote;
 
   String toString() => (this.getParentSeason() == null ? '': 'S${this.getParentSeason().getNumber()}') 
-    + 'E${this.getNumber()}' 
+    + '${this.getType()}${this.getNumber()}' 
     + (this.getName().isEmpty ? '' : ': ${this.getName()}');
 
 
