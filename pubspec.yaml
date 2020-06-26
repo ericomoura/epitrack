@@ -29,6 +29,7 @@ dependencies:
   json_annotation:
   path_provider:
   intl:
+  smooth_star_rating:
 
 dev_dependencies:
   flutter_test:

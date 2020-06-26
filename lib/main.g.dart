@@ -68,6 +68,7 @@ Episode _$EpisodeFromJson(Map<String, dynamic> json) {
             json['airingDateAndTime'] as Map<String, dynamic>),
     durationMinutes: json['durationMinutes'] as int,
     notes: json['notes'] as String,
+    rating: (json['rating'] as num)?.toDouble(),
   );
 }
 
@@ -81,6 +82,7 @@ Map<String, dynamic> _$EpisodeToJson(Episode instance) => <String, dynamic>{
       'parentShow': Utils.parentShowToJson(instance.parentShow),
       'parentSeason': Utils.parentSeasonToJson(instance.parentSeason),
       'notes': instance.notes,
+      'rating': instance.rating,
     };
 
 DateAndTime _$DateAndTimeFromJson(Map<String, dynamic> json) {

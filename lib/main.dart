@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:intl/intl.dart';
+import 'package:smooth_star_rating/smooth_star_rating.dart';
 
 part 'main.g.dart';
 
@@ -807,6 +808,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   String _newEpisodeNotes = '';
   int _numberOfEpisodes = 0;
   int _episodeInterval = 0;  // Days between episodes in a batch
+  double _episodeRating;
 
   _NewEpisodeScreenState(this._show){
     // Builds list of seasons
@@ -985,6 +987,15 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             )),
             Text('minutes')
           ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              allowHalfRating: true,
+              onRated: (value){
+                this._episodeRating = value;
+              }
+            ),
+          ]),
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
@@ -1009,10 +1020,11 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                   type: this._selectedType == null ? Constants.EPISODETYPES['Episode'] : this._selectedType,  // Defaults to type 'Episode'
                   airingDateAndTime: this._selectedDateAndTime,
                   durationMinutes: this._newEpisodeDuration,
-                  notes: this._newEpisodeNotes
+                  notes: this._newEpisodeNotes,
+                  rating: this._episodeRating
                 );
 
-                Utils.saveShowsToJson();  // Saves to persistent storage
+                Utils.saveShowsToJson();
                 Navigator.pop(context);
               }
               else{  // Form isn't okay
@@ -1192,6 +1204,15 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             )),
             Text('minutes')
           ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              allowHalfRating: true,
+              onRated: (value){
+                this._episodeRating = value;
+              }
+            )
+          ]),
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
@@ -1212,7 +1233,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
 
                 DateAndTime currentAiringDate = _selectedDateAndTime;  // Date that'll be incremented
                 for(int i = 0; i < this._numberOfEpisodes; i++){
-                  print(i);  //debug
                   this._show.addEpisode(
                     name: this._newEpisodeName,
                     season: this._selectedSeason,
@@ -1225,7 +1245,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                       minute: currentAiringDate.minute
                     ),
                     durationMinutes: this._newEpisodeDuration,
-                    notes: this._newEpisodeNotes
+                    notes: this._newEpisodeNotes,
+                    rating: this._episodeRating
                   );
 
                   currentAiringDate.addTime(this._episodeInterval, 0, 0);
@@ -1311,6 +1332,14 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
             Text('Duration: ', style: Constants.textStyleLabels),
             Text((this._episode.getDurationMinutes() == null ? '-' : '${this._episode.getDurationMinutes()} minutes'))
           ]),
+          Row(children: [
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              starCount: 5,
+              isReadOnly: true,
+              rating: this._episode.getRating()
+            )
+          ]),
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: Text(this._episode.getNotes()))
@@ -1358,6 +1387,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
   String _selectedType;  // Episode type currently selected in the dropdown menu
   DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
   String _episodeNotes;
+  double _episodeRating;
 
   _EditEpisodeScreenState(this._episode){
     // Builds list of all seasons
@@ -1373,6 +1403,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
     this._selectedType = this._episode.getType();
     this._selectedDateAndTime = this._episode.getAiringDateAndTime();
     this._episodeNotes = this._episode.getNotes();
+    this._episodeRating = this._episode.getRating();
   }
 
   @override
@@ -1534,6 +1565,16 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             )),
             Text('minutes')
           ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              allowHalfRating: true,
+              rating: this._episodeRating,
+              onRated: (value){
+                this._episodeRating = value;
+              }
+            )
+          ]),
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
@@ -1560,6 +1601,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                   this._episode.setAiringDateAndTime(this._selectedDateAndTime);
                   this._episode.setDurationMinutes(this._episodeDuration);
                   this._episode.setNotes(this._episodeNotes);
+                  this._episode.setRating(this._episodeRating);
 
                   Utils.saveShowsToJson();
                   Navigator.pop(context);
@@ -1582,7 +1624,8 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                     watched: this._episode.getWatched(),
                     airingDateAndTime: this._selectedDateAndTime,
                     durationMinutes: this._episodeDuration,
-                    notes: this._episodeNotes
+                    notes: this._episodeNotes,
+                    rating: this._episodeRating
                   );
 
                   Utils.saveShowsToJson();
@@ -1685,7 +1728,7 @@ class Show {
 
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
-  void addEpisode({String name, Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes}){
+  void addEpisode({String name, Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes, double rating}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int nextEpisodeNumber;
       Iterable<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == (type ==  null ? 'E' : type);} );
@@ -1703,7 +1746,8 @@ class Show {
         watched: watched, 
         airingDateAndTime: airingDateAndTime, 
         durationMinutes: durationMinutes,
-        notes: notes
+        notes: notes,
+        rating: rating
       ));
     }
     else{  // Calls the season's addEpisode() function
@@ -1713,7 +1757,8 @@ class Show {
         watched: watched,
         airingDateAndTime: airingDateAndTime,
         durationMinutes: durationMinutes,
-        notes: notes
+        notes: notes,
+        rating: rating
       );
     }
   }
@@ -1806,7 +1851,7 @@ class Season{
 
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate season number
-  void addEpisode({String name, String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes}){
+  void addEpisode({String name, String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes, double rating}){
     int nextEpisodeNumber;
     List<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} ).toList();
     
@@ -1823,7 +1868,8 @@ class Season{
       watched: watched, 
       airingDateAndTime: airingDateAndTime, 
       durationMinutes: durationMinutes,
-      notes: notes
+      notes: notes,
+      rating: rating
     ));
   }
 
@@ -1867,8 +1913,9 @@ class Episode{
   @JsonKey(toJson: Utils.parentSeasonToJson)
   Season parentSeason;  // Reference to the season which contains this episode. If null, episode has no season.
   String notes;
+  double rating;
 
-  Episode(this.number, Show parentShow, Season parentSeason, {this.name="", this.type, this.watched=false, this.airingDateAndTime, this.durationMinutes, this.notes=""}){
+  Episode(this.number, Show parentShow, Season parentSeason, {this.name="", this.type, this.watched=false, this.airingDateAndTime, this.durationMinutes, this.notes="", this.rating}){
     this.setParentShow(parentShow);
     this.setParentSeason(parentSeason);
     this.type = this.type == null ? Constants.EPISODETYPES['Episode'] : this.type;
@@ -1901,6 +1948,25 @@ class Episode{
 
   String getNotes() => this.notes;
   void setNotes(String newNote) => this.notes = newNote;
+
+  double getRating() => this.rating;
+  void setRating(double newRating){
+    double adjustedRating;
+
+    // Adjusts rating to closest valid value
+    if(newRating > Constants.ratingMax){  // Caps at max
+      adjustedRating = Constants.ratingMax.toDouble();
+    }
+    else if(newRating < Constants.ratingMin){  // Caps at min
+      adjustedRating = Constants.ratingMin.toDouble();
+    }
+    else{  // Rounds to nearest multiple of 'ratingStep'
+      adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
+    }
+
+    // Updates rating
+    this.rating = adjustedRating;
+  }
 
   String toString() => (this.getParentSeason() == null ? '': 'S${this.getParentSeason().getNumber()}') 
     + '${this.getType()}${this.getNumber()}' 
@@ -2029,6 +2095,10 @@ class Constants{
 
   static int minYear = -5000;
   static int maxYear = 5000;
+
+  static int ratingMax = 5;
+  static int ratingMin = 0;
+  static double ratingStep = 0.5;  // 0.5 allows half stars, 1 only allows full stars
 
   static String appbarPrefix = 'Epitrack | ';
   
