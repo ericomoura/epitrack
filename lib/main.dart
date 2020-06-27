@@ -185,12 +185,45 @@ class _NewShowScreenState extends State<NewShowScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              allowHalfRating: true,
-              onRated: (value){
-                this._newShowRating = value;
-              }
-            ),
+            this._newShowRating == null ?
+              SmoothStarRating(  // Empty rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: 0,
+                borderColor: Constants.highlightColor,
+                color: Constants.highlightColor,
+                onRated: (value){
+                  setState((){
+                    this._newShowRating = value;
+                  });
+                }
+              )
+              :
+              SmoothStarRating(  // Regular rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: this._newShowRating,
+                onRated: (value){
+                  setState((){
+                    this._newShowRating = value;
+                  });
+                }
+              ),
+            ButtonTheme(  // Remove rating button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._newShowRating == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._newShowRating == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._newShowRating = null;
+                  });
+                },
+              )
+            )
           ]),
           RaisedButton(  // Submit
             color: Constants.highlightColor,
@@ -299,11 +332,14 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              starCount: 5,
-              isReadOnly: true,
-              rating: this._show.getRating()
-            )
+            this._show.getRating() == null ?  // Shows '-' if there's no rating
+              Text('-') 
+              : 
+              SmoothStarRating(
+                starCount: Constants.ratingMax,
+                isReadOnly: true,
+                rating: this._show.getRating()
+              )
           ]),
           Row(children:[  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
@@ -533,12 +569,44 @@ class _EditShowScreenState extends State<EditShowScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              allowHalfRating: true,
-              rating: this._showRating,
-              onRated: (value){
-                this._showRating = value;
-              }
+            this._showRating == null ?
+              SmoothStarRating(  // Empty rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: 0,
+                borderColor: Constants.highlightColor,
+                color: Constants.highlightColor,
+                onRated: (value){
+                  setState((){
+                    this._showRating = value;
+                  });
+                }
+              )
+              :
+              SmoothStarRating(  // Regular rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: this._showRating,
+                onRated: (value){
+                  setState((){
+                    this._showRating = value;
+                  });
+                }
+              ),
+            ButtonTheme(  // Remove rating button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._showRating == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._showRating == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._showRating = null;
+                  });
+                },
+              )
             )
           ]),
           Row(children:[  // Notes
@@ -635,12 +703,45 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              allowHalfRating: true,
-              onRated: (value){
-                this._newSeasonRating = value;
-              }
-            ),
+            this._newSeasonRating == null ?
+              SmoothStarRating(  // Empty rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: 0,
+                borderColor: Constants.highlightColor,
+                color: Constants.highlightColor,
+                onRated: (value){
+                  setState((){
+                    this._newSeasonRating = value;
+                  });
+                }
+              )
+              :
+              SmoothStarRating(  // Regular rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: this._newSeasonRating,
+                onRated: (value){
+                  setState((){
+                    this._newSeasonRating = value;
+                  });
+                }
+              ),
+            ButtonTheme(  // Remove rating button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._newSeasonRating == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._newSeasonRating == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._newSeasonRating = null;
+                  });
+                },
+              )
+            )
           ]),
           RaisedButton(  // Submit
             color: Constants.highlightColor,
@@ -729,11 +830,14 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              starCount: 5,
-              isReadOnly: true,
-              rating: this._season.getRating()
-            )
+            this._season.getRating() == null ?  // Shows '-' if there's no rating
+              Text('-') 
+              : 
+              SmoothStarRating(
+                starCount: Constants.ratingMax,
+                isReadOnly: true,
+                rating: this._season.getRating()
+              )
           ]),
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
@@ -820,12 +924,44 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              allowHalfRating: true,
-              rating: this._seasonRating,
-              onRated: (value){
-                this._seasonRating = value;
-              }
+            this._seasonRating == null ?
+              SmoothStarRating(  // Empty rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: 0,
+                borderColor: Constants.highlightColor,
+                color: Constants.highlightColor,
+                onRated: (value){
+                  setState((){
+                    this._seasonRating = value;
+                  });
+                }
+              )
+              :
+              SmoothStarRating(  // Regular rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: this._seasonRating,
+                onRated: (value){
+                  setState((){
+                    this._seasonRating = value;
+                  });
+                }
+              ),
+            ButtonTheme(  // Remove rating button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._seasonRating == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._seasonRating == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._seasonRating = null;
+                  });
+                },
+              )
             )
           ]),
           RaisedButton(  // Submit
@@ -874,8 +1010,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
   String _newEpisodeNotes = '';
   int _numberOfEpisodes = 0;
-  int _episodeInterval = 0;  // Days between episodes in a batch
-  double _episodeRating;
+  int _newEpisodeInterval = 0;  // Days between episodes in a batch
+  double _newEpisodeRating;
 
   _NewEpisodeScreenState(this._show){
     // Builds list of seasons
@@ -1056,12 +1192,45 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              allowHalfRating: true,
-              onRated: (value){
-                this._episodeRating = value;
-              }
-            ),
+            this._newEpisodeRating == null ?
+              SmoothStarRating(  // Empty rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: 0,
+                borderColor: Constants.highlightColor,
+                color: Constants.highlightColor,
+                onRated: (value){
+                  setState((){
+                    this._newEpisodeRating = value;
+                  });
+                }
+              )
+              :
+              SmoothStarRating(  // Regular rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: this._newEpisodeRating,
+                onRated: (value){
+                  setState((){
+                    this._newEpisodeRating = value;
+                  });
+                }
+              ),
+            ButtonTheme(  // Remove rating button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._newEpisodeRating == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._newEpisodeRating == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._newEpisodeRating = null;
+                  });
+                },
+              )
+            )
           ]),
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
@@ -1088,7 +1257,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                   airingDateAndTime: this._selectedDateAndTime,
                   durationMinutes: this._newEpisodeDuration,
                   notes: this._newEpisodeNotes,
-                  rating: this._episodeRating
+                  rating: this._newEpisodeRating
                 );
 
                 Utils.saveShowsToJson();
@@ -1248,10 +1417,10 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
               decoration: InputDecoration(labelText: 'Interval'),
               keyboardType: TextInputType.number,
               inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
-              initialValue: this._episodeInterval.toString(),
+              initialValue: this._newEpisodeInterval.toString(),
               onSaved: (String value){
                 if(value.isNotEmpty){
-                  this._episodeInterval = int.parse(value);
+                  this._newEpisodeInterval = int.parse(value);
                 }
               }
             )),
@@ -1273,11 +1442,44 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              allowHalfRating: true,
-              onRated: (value){
-                this._episodeRating = value;
-              }
+            this._newEpisodeRating == null ?
+              SmoothStarRating(  // Empty rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: 0,
+                borderColor: Constants.highlightColor,
+                color: Constants.highlightColor,
+                onRated: (value){
+                  setState((){
+                    this._newEpisodeRating = value;
+                  });
+                }
+              )
+              :
+              SmoothStarRating(  // Regular rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: this._newEpisodeRating,
+                onRated: (value){
+                  setState((){
+                    this._newEpisodeRating = value;
+                  });
+                }
+              ),
+            ButtonTheme(  // Remove rating button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._newEpisodeRating == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._newEpisodeRating == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._newEpisodeRating = null;
+                  });
+                },
+              )
             )
           ]),
           Row(children: [  // Notes
@@ -1313,10 +1515,10 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                     ),
                     durationMinutes: this._newEpisodeDuration,
                     notes: this._newEpisodeNotes,
-                    rating: this._episodeRating
+                    rating: this._newEpisodeRating
                   );
 
-                  currentAiringDate.addTime(this._episodeInterval, 0, 0);
+                  currentAiringDate.addTime(this._newEpisodeInterval, 0, 0);
                 }
 
                 Utils.saveShowsToJson();  // Saves to persistent storage
@@ -1401,11 +1603,14 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              starCount: 5,
-              isReadOnly: true,
-              rating: this._episode.getRating()
-            )
+            this._episode.getRating() == null ?  // Shows '-' if there's no rating
+              Text('-') 
+              : 
+              SmoothStarRating(
+                starCount: Constants.ratingMax,
+                isReadOnly: true,
+                rating: this._episode.getRating()
+              )
           ]),
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
@@ -1634,12 +1839,44 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
-            SmoothStarRating(
-              allowHalfRating: true,
-              rating: this._episodeRating,
-              onRated: (value){
-                this._episodeRating = value;
-              }
+            this._episodeRating == null ?
+              SmoothStarRating(  // Empty rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: 0,
+                borderColor: Constants.highlightColor,
+                color: Constants.highlightColor,
+                onRated: (value){
+                  setState((){
+                    this._episodeRating = value;
+                  });
+                }
+              )
+              :
+              SmoothStarRating(  // Regular rating bar
+                starCount: Constants.ratingMax,
+                allowHalfRating: true,
+                rating: this._episodeRating,
+                onRated: (value){
+                  setState((){
+                    this._episodeRating = value;
+                  });
+                }
+              ),
+            ButtonTheme(  // Remove rating button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._episodeRating == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._episodeRating == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._episodeRating = null;
+                  });
+                },
+              )
             )
           ]),
           Row(children: [  // Notes
@@ -1798,19 +2035,24 @@ class Show {
   void setRating(double newRating){
     double adjustedRating;
 
-    // Adjusts rating to closest valid value
-    if(newRating > Constants.ratingMax){  // Caps at max
-      adjustedRating = Constants.ratingMax.toDouble();
+    if(newRating == null){
+      this.rating = null;
     }
-    else if(newRating < Constants.ratingMin){  // Caps at min
-      adjustedRating = Constants.ratingMin.toDouble();
-    }
-    else{  // Rounds to nearest multiple of 'ratingStep'
-      adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
-    }
+    else{
+      // Adjusts rating to closest valid value
+      if(newRating > Constants.ratingMax){  // Caps at max
+        adjustedRating = Constants.ratingMax.toDouble();
+      }
+      else if(newRating < Constants.ratingMin){  // Caps at min
+        adjustedRating = Constants.ratingMin.toDouble();
+      }
+      else{  // Rounds to nearest multiple of 'ratingStep'
+        adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
+      }
 
-    // Updates rating
-    this.rating = adjustedRating;
+      // Updates rating
+      this.rating = adjustedRating;
+    }
   }
 
   List<Episode> getEpisodes() => this.episodes;
@@ -1912,7 +2154,6 @@ class Show {
   Map<String, dynamic> toJson() => _$ShowToJson(this);
 
 }
-
 @JsonSerializable(explicitToJson: true)
 class Season{
   int number;
@@ -1941,19 +2182,24 @@ class Season{
   void setRating(double newRating){
     double adjustedRating;
 
-    // Adjusts rating to closest valid value
-    if(newRating > Constants.ratingMax){  // Caps at max
-      adjustedRating = Constants.ratingMax.toDouble();
+    if(newRating == null){
+      this.rating = null;
     }
-    else if(newRating < Constants.ratingMin){  // Caps at min
-      adjustedRating = Constants.ratingMin.toDouble();
-    }
-    else{  // Rounds to nearest multiple of 'ratingStep'
-      adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
-    }
+    else{
+      // Adjusts rating to closest valid value
+      if(newRating > Constants.ratingMax){  // Caps at max
+        adjustedRating = Constants.ratingMax.toDouble();
+      }
+      else if(newRating < Constants.ratingMin){  // Caps at min
+        adjustedRating = Constants.ratingMin.toDouble();
+      }
+      else{  // Rounds to nearest multiple of 'ratingStep'
+        adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
+      }
 
-    // Updates rating
-    this.rating = adjustedRating;
+      // Updates rating
+      this.rating = adjustedRating;
+    }
   }
 
 
@@ -2007,7 +2253,6 @@ class Season{
   Map<String, dynamic> toJson() => _$SeasonToJson(this);
 
 }
-
 @JsonSerializable(explicitToJson: true)
 class Episode{
   int number;
@@ -2061,19 +2306,24 @@ class Episode{
   void setRating(double newRating){
     double adjustedRating;
 
-    // Adjusts rating to closest valid value
-    if(newRating > Constants.ratingMax){  // Caps at max
-      adjustedRating = Constants.ratingMax.toDouble();
+    if(newRating == null){
+      this.rating = null;
     }
-    else if(newRating < Constants.ratingMin){  // Caps at min
-      adjustedRating = Constants.ratingMin.toDouble();
-    }
-    else{  // Rounds to nearest multiple of 'ratingStep'
-      adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
-    }
+    else{
+      // Adjusts rating to closest valid value
+      if(newRating > Constants.ratingMax){  // Caps at max
+        adjustedRating = Constants.ratingMax.toDouble();
+      }
+      else if(newRating < Constants.ratingMin){  // Caps at min
+        adjustedRating = Constants.ratingMin.toDouble();
+      }
+      else{  // Rounds to nearest multiple of 'ratingStep'
+        adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
+      }
 
-    // Updates rating
-    this.rating = adjustedRating;
+      // Updates rating
+      this.rating = adjustedRating;
+    }
   }
 
   String toString() => (this.getParentSeason() == null ? '': 'S${this.getParentSeason().getNumber()}') 
@@ -2403,11 +2653,12 @@ class Validators{
     }
 
     // Tests if there's already another show with the same name
-    for(Show show in EpitrackApp.showsList){
+    //disabled since it won't let you save without changing the name (finds itself in the list and returns error)
+    /*for(Show show in EpitrackApp.showsList){
       if(show.getName() == value){
         return "There's already a show with that name";
       }
-    }
+    }*/
 
     return null;  // Name is okay
   }
