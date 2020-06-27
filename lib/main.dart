@@ -2207,7 +2207,7 @@ class Season{
   // Adds a new episode using the appropriate season number
   void addEpisode({String name, String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes, double rating}){
     int nextEpisodeNumber;
-    List<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == type;} ).toList();
+    Iterable<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == (type ==  null ? 'E' : type);} );
     
     if(sameTypeEpisodes.isEmpty){
       nextEpisodeNumber = 1;
