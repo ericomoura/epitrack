@@ -141,8 +141,10 @@ class NewShowScreen extends StatefulWidget{
 }
 class _NewShowScreenState extends State<NewShowScreen>{
   final _formKey = GlobalKey<FormState>();
+
   String _newShowName = '';
   String _newShowNotes;
+  double _newShowRating;
 
   @override
   Widget build(BuildContext context) {
@@ -181,6 +183,15 @@ class _NewShowScreenState extends State<NewShowScreen>{
               },
             ))
           ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              allowHalfRating: true,
+              onRated: (value){
+                this._newShowRating = value;
+              }
+            ),
+          ]),
           RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Add show'),
@@ -188,7 +199,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
               if (_formKey.currentState.validate()) {  //Form is okay, add show
                 _formKey.currentState.save();
 
-                EpitrackApp.showsList.add(Show(this._newShowName, notes: this._newShowNotes));
+                EpitrackApp.showsList.add(Show(this._newShowName, notes: this._newShowNotes, rating: this._newShowRating));
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -285,6 +296,14 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           Row(children: [  // Airing period
             Text('Airing period: ', style: Constants.textStyleLabels),
             Text('${this._show.getAiringPeriod()}')
+          ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              starCount: 5,
+              isReadOnly: true,
+              rating: this._show.getRating()
+            )
           ]),
           Row(children:[  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
@@ -475,11 +494,13 @@ class _EditShowScreenState extends State<EditShowScreen>{
 
   String _showName;
   String _showNotes;
+  double _showRating;
 
   _EditShowScreenState(this._show){
     // Initializes form values
     this._showName = this._show.getName();
     this._showNotes = this._show.getNotes();
+    this._showRating = this._show.getRating();
   }
 
   @override
@@ -510,6 +531,16 @@ class _EditShowScreenState extends State<EditShowScreen>{
               },
             )),
           ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              allowHalfRating: true,
+              rating: this._showRating,
+              onRated: (value){
+                this._showRating = value;
+              }
+            )
+          ]),
           Row(children:[  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
@@ -530,6 +561,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
 
                 this._show.setName(this._showName);
                 this._show.setNotes(this._showNotes);
+                this._show.setRating(this._showRating);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -559,6 +591,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
 
   String _newSeasonName = '';
   String _newSeasonNotes;
+  double _newSeasonRating;
 
   _NewSeasonScreenState(this._show);
 
@@ -600,6 +633,15 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
               },
             ))
           ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              allowHalfRating: true,
+              onRated: (value){
+                this._newSeasonRating = value;
+              }
+            ),
+          ]),
           RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Add season'),
@@ -607,7 +649,11 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
               if (this._formKey.currentState.validate()) {  // Form is okay, add season
                 this._formKey.currentState.save();
                 
-                this._show.addSeason(name: this._newSeasonName, notes: this._newSeasonNotes);
+                this._show.addSeason(
+                  name: this._newSeasonName,
+                  notes: this._newSeasonNotes,
+                  rating: this._newSeasonRating
+                );
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -681,6 +727,14 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
             Text('Airing period: ', style: Constants.textStyleLabels),
             Text('${this._season.getAiringPeriod()}')
           ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              starCount: 5,
+              isReadOnly: true,
+              rating: this._season.getRating()
+            )
+          ]),
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: Text('${this._season.getNotes()}')),
@@ -717,11 +771,13 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
 
   String _seasonName;
   String _seasonNotes;
+  double _seasonRating;
 
   _EditSeasonScreenState(this._season){
     // Initializes form values
     this._seasonName = this._season.getName();
     this._seasonNotes = this._season.getNotes();
+    this._seasonRating = this._season.getRating();
   }
 
   @override
@@ -762,6 +818,16 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
               },
             ))
           ]),
+          Row(children: [  // Rating
+            Text('Rating: ', style: Constants.textStyleLabels),
+            SmoothStarRating(
+              allowHalfRating: true,
+              rating: this._seasonRating,
+              onRated: (value){
+                this._seasonRating = value;
+              }
+            )
+          ]),
           RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Save changes'),
@@ -771,6 +837,7 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
 
                 this._season.setName(this._seasonName);
                 this._season.setNotes(this._seasonNotes);
+                this._season.setRating(this._seasonRating);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -1332,7 +1399,7 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
             Text('Duration: ', style: Constants.textStyleLabels),
             Text((this._episode.getDurationMinutes() == null ? '-' : '${this._episode.getDurationMinutes()} minutes'))
           ]),
-          Row(children: [
+          Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
             SmoothStarRating(
               starCount: 5,
@@ -1717,14 +1784,34 @@ class Show {
   List<Season> seasons = List<Season>();
   List<Episode> episodes = List<Episode>();  // Episodes that don't have a season (e.g. specials, OVAs, etc.)
   String notes;
+  double rating;
 
-  Show(this.name, {this.notes});
+  Show(this.name, {this.notes, this.rating});
 
   String getName() => this.name;
   void setName(String newName) => this.name = newName;
 
   String getNotes() => this.notes;
   void setNotes(String newNote) => this.notes = newNote;
+
+  double getRating() => this.rating;
+  void setRating(double newRating){
+    double adjustedRating;
+
+    // Adjusts rating to closest valid value
+    if(newRating > Constants.ratingMax){  // Caps at max
+      adjustedRating = Constants.ratingMax.toDouble();
+    }
+    else if(newRating < Constants.ratingMin){  // Caps at min
+      adjustedRating = Constants.ratingMin.toDouble();
+    }
+    else{  // Rounds to nearest multiple of 'ratingStep'
+      adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
+    }
+
+    // Updates rating
+    this.rating = adjustedRating;
+  }
 
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
@@ -1765,7 +1852,7 @@ class Show {
 
   List<Season> getSeasons() => this.seasons;
   // Adds a new season using the appropriate season number
-  void addSeason({String name="", String notes}){
+  void addSeason({String name="", String notes, double rating}){
     int nextSeasonNumber;
     
     if(this.seasons.isEmpty){
@@ -1775,7 +1862,7 @@ class Show {
       nextSeasonNumber = this.seasons.last.getNumber() + 1;
     }
 
-    this.seasons.add(Season(nextSeasonNumber, name, this, notes: notes));
+    this.seasons.add(Season(nextSeasonNumber, name, this, notes: notes, rating: rating));
   }
   // Returns the season with the given name
   Season getSeasonByName(String name){
@@ -1834,8 +1921,9 @@ class Season{
   @JsonKey(toJson: Utils.parentShowToJson)
   Show parentShow;  // Reference to the show which contains this season
   String notes;
+  double rating;
 
-  Season(this.number, this.name, this.parentShow, {this.notes=''});
+  Season(this.number, this.name, this.parentShow, {this.notes='', this.rating});
 
   int getNumber() => this.number;
   void setNumber(int number) => this.number = number;
@@ -1848,6 +1936,26 @@ class Season{
 
   String getNotes() => this.notes;
   void setNotes(String newNote) => this.notes = newNote;
+
+  double getRating() => this.rating;
+  void setRating(double newRating){
+    double adjustedRating;
+
+    // Adjusts rating to closest valid value
+    if(newRating > Constants.ratingMax){  // Caps at max
+      adjustedRating = Constants.ratingMax.toDouble();
+    }
+    else if(newRating < Constants.ratingMin){  // Caps at min
+      adjustedRating = Constants.ratingMin.toDouble();
+    }
+    else{  // Rounds to nearest multiple of 'ratingStep'
+      adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
+    }
+
+    // Updates rating
+    this.rating = adjustedRating;
+  }
+
 
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate season number
