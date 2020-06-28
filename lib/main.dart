@@ -441,7 +441,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           ExpansionTile noSeasonTile = ExpansionTile(
             title: Text('No season'),
             backgroundColor: Constants.highlightColor,
-            children: _show.getEpisodes().map((episode){
+            children: this._show.getEpisodes().map((episode){
               return ListTile(
                 title: Text('$episode'),
                 trailing: IconButton(
@@ -1954,20 +1954,264 @@ class UpcomingEpisodesScreen extends StatefulWidget{
   _UpcomingEpisodesScreenState createState() => _UpcomingEpisodesScreenState();
 }
 class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
-  final List<Episode> _allEpisodes = List<Episode>();
+  final List<Episode> _futureEpisodes = List<Episode>();
+  final List<Episode> _noDate = List<Episode>();
+  final List<Episode> _withinDay = List<Episode>();
+  final List<Episode> _withinWeek = List<Episode>();
+  final List<Episode> _withinMonth = List<Episode>();
+  final List<Episode> _withinThreeMonths = List<Episode>();
+  final List<Episode> _withinSixMonths = List<Episode>();
+  final List<Episode> _withinYear = List<Episode>();
+  final List<Episode> _overYear = List<Episode>();
+  final List<Widget> _upcomingList = List<Widget>();
 
   _UpcomingEpisodesScreenState(){
     for(Show show in EpitrackApp.showsList){  // Goes through every show
       for(Episode episode in show.getEpisodes()){  // Adds all the episodes without a season
-        _allEpisodes.add(episode);
+        this._futureEpisodes.add(episode);
       }
       for(Season season in show.getSeasons()){  // Adds all the episodes in every season
         for(Episode episode in season.getEpisodes()){
-          _allEpisodes.add(episode);
+          this._futureEpisodes.add(episode);
         }
       }
     }
-    _allEpisodes.sort(Comparators.compareEpisodesAiringDateAndTime);  // Sorts by airing date
+    this._futureEpisodes.sort(Comparators.compareEpisodesAiringDateAndTime);  // Sorts by airing date
+
+    // Separates episode based on airing date
+    for(Episode episode in this._futureEpisodes){
+      // No date set
+      if(episode.airingDateAndTime.hasDate() == false){  
+        this._noDate.add(episode);
+      }
+      // Past dates
+      else if(episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now())){
+        // Ignores episodes that have already aired
+      }
+      // Within a day
+      else if(episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now().add(Duration(days: 1)))){
+        this._withinDay.add(episode);
+      }
+      // Witin a week
+      else if(episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now().add(Duration(days: 7)))){
+        this._withinWeek.add(episode);
+      }
+      // Within a month
+      else if(episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now().add(Duration(days: 30)))){
+        this._withinMonth.add(episode);
+      }
+      // Within 3 months
+      else if(episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now().add(Duration(days: 90)))){
+        this._withinThreeMonths.add(episode);
+      }
+      // Within 6 months
+      else if(episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now().add(Duration(days: 180)))){
+        this._withinSixMonths.add(episode);
+      }
+      // Within a year
+      else if(episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now().add(Duration(days: 360)))){
+        this._withinYear.add(episode);
+      }
+      // Over a year
+      else{
+        this._overYear.add(episode);
+      }
+    }
+
+    // Builds list with headers and dividers
+    if(this._withinDay.isNotEmpty){
+      this._upcomingList.add(Utils.buildListSectionHeader(text: 'Within a day'));
+      for(Episode episode in this._withinDay){
+        this._upcomingList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+        ));
+
+        this._upcomingList.add(Divider());
+      }
+      this._upcomingList.removeLast();  // Removes last hanging divider
+    }
+    if(this._withinWeek.isNotEmpty){
+      this._upcomingList.add(Utils.buildListSectionHeader(text: 'Within a week'));
+      for(Episode episode in this._withinWeek){
+        this._upcomingList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+        ));
+
+        this._upcomingList.add(Divider());
+      }
+      this._upcomingList.removeLast();  // Removes last hanging divider
+    }
+    if(this._withinMonth.isNotEmpty){
+      this._upcomingList.add(Utils.buildListSectionHeader(text: 'Within a month'));
+      for(Episode episode in this._withinMonth){
+        this._upcomingList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+        ));
+
+        this._upcomingList.add(Divider());
+      }
+      this._upcomingList.removeLast();  // Removes last hanging divider
+    }
+    if(this._withinThreeMonths.isNotEmpty){
+      this._upcomingList.add(Utils.buildListSectionHeader(text: 'Within 3 months'));
+      for(Episode episode in this._withinThreeMonths){
+        this._upcomingList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+        ));
+
+        this._upcomingList.add(Divider());
+      }
+      this._upcomingList.removeLast();  // Removes last hanging divider
+    }
+    if(this._withinSixMonths.isNotEmpty){
+      this._upcomingList.add(Utils.buildListSectionHeader(text: 'Within 6 months'));
+      for(Episode episode in this._withinSixMonths){
+        this._upcomingList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+        ));
+
+        this._upcomingList.add(Divider());
+      }
+      this._upcomingList.removeLast();  // Removes last hanging divider
+    }
+    if(this._withinYear.isNotEmpty){
+      this._upcomingList.add(Utils.buildListSectionHeader(text: 'Within a year'));
+      for(Episode episode in this._withinYear){
+        this._upcomingList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+        ));
+
+        this._upcomingList.add(Divider());
+      }
+      this._upcomingList.removeLast();  // Removes last hanging divider
+    }
+    if(this._overYear.isNotEmpty){
+      this._upcomingList.add(Utils.buildListSectionHeader(text: 'Over a year'));
+      for(Episode episode in this._overYear){
+        this._upcomingList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+        ));
+
+        this._upcomingList.add(Divider());
+      }
+      this._upcomingList.removeLast();  // Removes last hanging divider
+    }
+    if(this._noDate.isNotEmpty){
+      this._upcomingList.add(Utils.buildListSectionHeader(text: 'No date'));
+      for(Episode episode in this._noDate){
+        this._upcomingList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+        ));
+
+        this._upcomingList.add(Divider());
+      }
+      this._upcomingList.removeLast();  // Removes last hanging divider
+    }
+
   }
 
   @override
@@ -1981,32 +2225,9 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
       ),
       drawer: Utils.buildEpitrackDrawer(context),
       body: ListView.builder(
-        itemCount: 2 * _allEpisodes.length,  // Accounts for dividers
+        itemCount: this._upcomingList.length,
         itemBuilder: (BuildContext context, int listIndex){
-          // Adds dividers between items
-          if(listIndex.isOdd){
-            return Divider();
-          }
-
-          final int episodeIndex = listIndex ~/ 2; // Adjusts index to take into account the dividers in the list
-          final Episode currentEpisode = _allEpisodes[episodeIndex];
-
-          return ListTile(
-            title: Text( currentEpisode.getParentSeason() == null ?
-              'E${currentEpisode.getNumber()} of ${currentEpisode.getParentShow()}'
-              :
-              'S${currentEpisode.getParentSeason().getNumber()}E${currentEpisode.getNumber()} of ${currentEpisode.getParentShow()}'
-            ),
-            subtitle: Text(currentEpisode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
-            onTap: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(currentEpisode)))
-              .then((_){
-                setState((){
-                  //Updates episode tile
-                });
-              });
-            },
-          );
+          return this._upcomingList[listIndex];
         },
       )
     );
@@ -2465,11 +2686,12 @@ class Constants{
 
   // Text style
   static TextStyle textStyleLabels = TextStyle(fontWeight: FontWeight.bold);
+  static TextStyle textStyleListHeaders = TextStyle(fontWeight: FontWeight.w300);
 
   // Theme
-  static const Color mainColor = deeppurple;
-  static const Color backgroundColor = deeppurpleBackground;
-  static const Color highlightColor = deeppurpleHighlight;
+  static const Color mainColor = yellow;
+  static const Color backgroundColor = yellowBackground;
+  static const Color highlightColor = yellowHighlight;
 
   // Colors
   static const Color red = Colors.red;  // red
@@ -2493,10 +2715,34 @@ class Constants{
   static const Color deeppurple = Colors.deepPurple;  // deepPurple
   static const Color deeppurpleBackground = Color(4291937513);  //deepPurple[100]
   static const Color deeppurpleHighlight = Color(4289961435);  // deepPurple[200]
+  static const Color yellow = Colors.yellow;  // yellow
+  static const Color yellowBackground = Color(4294965700);  // yellow[100]
+  static const Color yellowHighlight = Color(4294964637);  // yellow[200]
 
 }
 
 class Utils{
+
+  // Creates a list section header with the given children widgets
+  static Container buildListSectionHeader({Widget child, String text}){
+    if(child != null){  // Child widget specified
+      return Container(
+        color: Constants.highlightColor,
+        padding: EdgeInsets.all(5.0),
+        child: child,
+      );
+    }
+    else if(text != null){  // Text specified
+      return Container(
+        color: Constants.highlightColor,
+        padding: EdgeInsets.all(5.0),
+        child: Text(text, style: Constants.textStyleListHeaders, textAlign: TextAlign.center),
+      );
+    }
+    else{  // Nothing specified
+      return null;
+    }
+  }
 
   // Functions used to save Season and Episode to JSON. Parents can't be ignored so are set to null to avoid infinite loops in the JSON.
   static String parentShowToJson(Show parentShow){
