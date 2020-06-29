@@ -145,6 +145,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
   String _newShowName = '';
   String _newShowNotes;
   double _newShowRating;
+  String _newShowAuthor;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +163,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
   Widget _buildNewShowForm(){
     return Form(
       key: this._formKey,
-      child: Column(
+      child: SingleChildScrollView(child: Column(
         children: <Widget>[
           Row( children:[  // Name
             Text('Name: ', style: Constants.textStyleLabels),
@@ -170,6 +171,14 @@ class _NewShowScreenState extends State<NewShowScreen>{
               validator: Validators.newShowName,
               onSaved: (String value) {
                 this._newShowName = value;
+              }
+            ))
+          ]),
+          Row(children: [  // Author
+            Text('Author: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              onSaved: (String value) {
+                this._newShowAuthor = value.isEmpty ? null : value;
               }
             ))
           ]),
@@ -232,7 +241,12 @@ class _NewShowScreenState extends State<NewShowScreen>{
               if (_formKey.currentState.validate()) {  //Form is okay, add show
                 _formKey.currentState.save();
 
-                EpitrackApp.showsList.add(Show(this._newShowName, notes: this._newShowNotes, rating: this._newShowRating));
+                EpitrackApp.showsList.add(Show(
+                  this._newShowName,
+                  notes: this._newShowNotes,
+                  rating: this._newShowRating,
+                  author: this._newShowAuthor
+                ));
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -243,7 +257,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
           )
         ]
       )
-    );
+    ));
   }
 
 }
@@ -329,6 +343,10 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           Row(children: [  // Airing period
             Text('Airing period: ', style: Constants.textStyleLabels),
             Text('${this._show.getAiringPeriod()}')
+          ]),
+          Row(children:[  // Author
+            Text('Author: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: Text(this._show.getAuthor() == null ? '-' : '${this._show.getAuthor()}')),
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
@@ -531,12 +549,14 @@ class _EditShowScreenState extends State<EditShowScreen>{
   String _showName;
   String _showNotes;
   double _showRating;
+  String _showAuthor;
 
   _EditShowScreenState(this._show){
     // Initializes form values
     this._showName = this._show.getName();
     this._showNotes = this._show.getNotes();
     this._showRating = this._show.getRating();
+    this._showAuthor = this._show.getAuthor();
   }
 
   @override
@@ -544,7 +564,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${Constants.appbarPrefix}Editing $this._showName',
+          '${Constants.appbarPrefix}Editing ${this._showName}',
           style: TextStyle(fontSize: Constants.appbarFontSize)
         )
       ),
@@ -564,6 +584,15 @@ class _EditShowScreenState extends State<EditShowScreen>{
               validator: Validators.editShowName,
               onSaved: (String value) {
                 this._showName = value;
+              },
+            )),
+          ]),
+          Row(children:[  // Author
+            Text('Author: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              initialValue: this._showAuthor,
+              onSaved: (String value) {
+                this._showAuthor = value.isEmpty ? null : value;
               },
             )),
           ]),
@@ -620,7 +649,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
               },
             )),
           ]),
-          RaisedButton(
+          RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Save changes'),
             onPressed: () {
@@ -630,6 +659,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
                 this._show.setName(this._showName);
                 this._show.setNotes(this._showNotes);
                 this._show.setRating(this._showRating);
+                this._show.setAuthor(this._showAuthor);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -660,6 +690,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
   String _newSeasonName = '';
   String _newSeasonNotes;
   double _newSeasonRating;
+  String _newSeasonProduction;
 
   _NewSeasonScreenState(this._show);
 
@@ -679,7 +710,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
   Widget _buildNewSeasonForm(){
     return Form(
       key: this._formKey,
-      child: Column(
+      child: SingleChildScrollView(child: Column(
         children: <Widget>[
           Row(children: [  // Name
             Text('Name: ', style: Constants.textStyleLabels),
@@ -690,14 +721,12 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
               },
             ))
           ]),
-          Row(children: [  // Notes
-            Text('Notes: ', style: Constants.textStyleLabels),
-            Container(width: 300, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Notes'),
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
+          Row(children: [  // Production
+            Text('Production: ', style: Constants.textStyleLabels),
+            Container(width: 270, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Production'),
               onSaved: (String value) {
-                this._newSeasonNotes = value;
+                this._newSeasonProduction = value.isEmpty ? null : value;
               },
             ))
           ]),
@@ -743,6 +772,17 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
               )
             )
           ]),
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Notes'),
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              onSaved: (String value) {
+                this._newSeasonNotes = value;
+              },
+            ))
+          ]),
           RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Add season'),
@@ -753,7 +793,8 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
                 this._show.addSeason(
                   name: this._newSeasonName,
                   notes: this._newSeasonNotes,
-                  rating: this._newSeasonRating
+                  rating: this._newSeasonRating,
+                  production: this._newSeasonProduction
                 );
 
                 Utils.saveShowsToJson();
@@ -765,7 +806,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
           )
         ]
       )
-    );
+    ));
   }
 
 }
@@ -828,6 +869,10 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
             Text('Airing period: ', style: Constants.textStyleLabels),
             Text('${this._season.getAiringPeriod()}')
           ]),
+          Row(children: [  // Production
+            Text('Production: ', style: Constants.textStyleLabels),
+            Container(width: 270, child: Text(this._season.getProduction() == null ? '-' : '${this._season.getProduction()}')),
+          ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
             this._season.getRating() == null ?  // Shows '-' if there's no rating
@@ -876,12 +921,14 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
   String _seasonName;
   String _seasonNotes;
   double _seasonRating;
+  String _seasonProduction;
 
   _EditSeasonScreenState(this._season){
     // Initializes form values
     this._seasonName = this._season.getName();
     this._seasonNotes = this._season.getNotes();
     this._seasonRating = this._season.getRating();
+    this._seasonProduction = this._season.getProduction();
   }
 
   @override
@@ -905,9 +952,18 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
           Row(children:[  // Name
             Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
-              initialValue: this._season.getName(),
+              initialValue: this._seasonName,
               onSaved: (String value) {
                 this._seasonName = value;
+              },
+            ))
+          ]),
+          Row(children:[  // Production
+            Text('Production: ', style: Constants.textStyleLabels),
+            Container(width: 270, child: TextFormField(
+              initialValue: this._seasonProduction,
+              onSaved: (String value) {
+                this._seasonProduction = value.isEmpty ? null : value;
               },
             ))
           ]),
@@ -916,7 +972,7 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
             Container(width: 300, child: TextFormField(
               keyboardType: TextInputType.multiline,
               maxLines: null,
-              initialValue: this._season.getNotes(),
+              initialValue: this._seasonNotes,
               onSaved: (String value) {
                 this._seasonNotes = value;
               },
@@ -974,6 +1030,7 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
                 this._season.setName(this._seasonName);
                 this._season.setNotes(this._seasonNotes);
                 this._season.setRating(this._seasonRating);
+                this._season.setProduction(this._seasonProduction);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -1554,7 +1611,7 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
     return Scaffold(
       appBar: AppBar(
         title: this._episode.getParentSeason() == null ?   // Remove season number from appbar if there is no season
-          Text('${Constants.appbarPrefix}E${this._episode.getNumber()} ${this._episode.getParentShow()}',
+          Text('${Constants.appbarPrefix}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
           : 
@@ -2243,14 +2300,18 @@ class Show {
   List<Episode> episodes = List<Episode>();  // Episodes that don't have a season (e.g. specials, OVAs, etc.)
   String notes;
   double rating;
+  String author;
 
-  Show(this.name, {this.notes, this.rating});
+  Show(this.name, {this.notes, this.rating, this.author});
 
   String getName() => this.name;
   void setName(String newName) => this.name = newName;
 
   String getNotes() => this.notes;
   void setNotes(String newNote) => this.notes = newNote;
+
+  String getAuthor() => this.author;
+  void setAuthor(String newAuthor) => this.author = newAuthor;
 
   double getRating() => this.rating;
   void setRating(double newRating){
@@ -2315,7 +2376,7 @@ class Show {
 
   List<Season> getSeasons() => this.seasons;
   // Adds a new season using the appropriate season number
-  void addSeason({String name="", String notes, double rating}){
+  void addSeason({String name="", String notes, double rating, String production}){
     int nextSeasonNumber;
     
     if(this.seasons.isEmpty){
@@ -2325,7 +2386,7 @@ class Show {
       nextSeasonNumber = this.seasons.last.getNumber() + 1;
     }
 
-    this.seasons.add(Season(nextSeasonNumber, name, this, notes: notes, rating: rating));
+    this.seasons.add(Season(nextSeasonNumber, name, this, notes: notes, rating: rating, production: production));
   }
   // Returns the season with the given name
   Season getSeasonByName(String name){
@@ -2384,8 +2445,9 @@ class Season{
   Show parentShow;  // Reference to the show which contains this season
   String notes;
   double rating;
+  String production;
 
-  Season(this.number, this.name, this.parentShow, {this.notes='', this.rating});
+  Season(this.number, this.name, this.parentShow, {this.notes='', this.rating, this.production});
 
   int getNumber() => this.number;
   void setNumber(int number) => this.number = number;
@@ -2398,6 +2460,9 @@ class Season{
 
   String getNotes() => this.notes;
   void setNotes(String newNote) => this.notes = newNote;
+
+  String getProduction() => this.production;
+  void setProduction(String newProduction) => this.production = newProduction;
 
   double getRating() => this.rating;
   void setRating(double newRating){
@@ -2689,9 +2754,9 @@ class Constants{
   static TextStyle textStyleListHeaders = TextStyle(fontWeight: FontWeight.w300);
 
   // Theme
-  static const Color mainColor = yellow;
-  static const Color backgroundColor = yellowBackground;
-  static const Color highlightColor = yellowHighlight;
+  static const Color mainColor = bluegrey;
+  static const Color backgroundColor = bluegreyBackground;
+  static const Color highlightColor = bluegreyHighlight;
 
   // Colors
   static const Color red = Colors.red;  // red

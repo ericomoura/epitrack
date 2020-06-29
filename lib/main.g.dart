@@ -11,6 +11,7 @@ Show _$ShowFromJson(Map<String, dynamic> json) {
     json['name'] as String,
     notes: json['notes'] as String,
     rating: (json['rating'] as num)?.toDouble(),
+    author: json['author'] as String,
   )
     ..seasons = (json['seasons'] as List)
         ?.map((e) =>
@@ -28,6 +29,7 @@ Map<String, dynamic> _$ShowToJson(Show instance) => <String, dynamic>{
       'episodes': instance.episodes?.map((e) => e?.toJson())?.toList(),
       'notes': instance.notes,
       'rating': instance.rating,
+      'author': instance.author,
     };
 
 Season _$SeasonFromJson(Map<String, dynamic> json) {
@@ -39,6 +41,7 @@ Season _$SeasonFromJson(Map<String, dynamic> json) {
         : Show.fromJson(json['parentShow'] as Map<String, dynamic>),
     notes: json['notes'] as String,
     rating: (json['rating'] as num)?.toDouble(),
+    production: json['production'] as String,
   )..episodes = (json['episodes'] as List)
       ?.map(
           (e) => e == null ? null : Episode.fromJson(e as Map<String, dynamic>))
@@ -52,6 +55,7 @@ Map<String, dynamic> _$SeasonToJson(Season instance) => <String, dynamic>{
       'parentShow': Utils.parentShowToJson(instance.parentShow),
       'notes': instance.notes,
       'rating': instance.rating,
+      'production': instance.production,
     };
 
 Episode _$EpisodeFromJson(Map<String, dynamic> json) {
