@@ -1069,6 +1069,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
   int _numberOfEpisodes = 0;
   int _newEpisodeInterval = 0;  // Days between episodes in a batch
   double _newEpisodeRating;
+  String _newEpisodeProduction;
 
   _NewEpisodeScreenState(this._show){
     // Builds list of seasons
@@ -1247,6 +1248,15 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             )),
             Text('minutes')
           ]),
+          Row(children: [  // Production
+            Text('Production: ', style: Constants.textStyleLabels),
+            Container(width: 270, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Production'),
+              onSaved: (String value) {
+                this._newEpisodeProduction = value.isEmpty ? null : value;
+              },
+            ))
+          ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
             this._newEpisodeRating == null ?
@@ -1314,7 +1324,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                   airingDateAndTime: this._selectedDateAndTime,
                   durationMinutes: this._newEpisodeDuration,
                   notes: this._newEpisodeNotes,
-                  rating: this._newEpisodeRating
+                  rating: this._newEpisodeRating,
+                  production: this._newEpisodeProduction
                 );
 
                 Utils.saveShowsToJson();
@@ -1497,6 +1508,15 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             )),
             Text('minutes')
           ]),
+          Row(children: [  // Production
+            Text('Production: ', style: Constants.textStyleLabels),
+            Container(width: 270, child: TextFormField(
+              decoration: InputDecoration(labelText: 'Production'),
+              onSaved: (String value) {
+                this._newEpisodeProduction = value.isEmpty ? null : value;
+              },
+            ))
+          ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
             this._newEpisodeRating == null ?
@@ -1658,6 +1678,10 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
             Text('Duration: ', style: Constants.textStyleLabels),
             Text((this._episode.getDurationMinutes() == null ? '-' : '${this._episode.getDurationMinutes()} minutes'))
           ]),
+          Row(children: [  // Production
+            Text('Production: ', style: Constants.textStyleLabels),
+            Container(width: 270, child: Text(this._episode.getProduction() == null ? '-' : '${this._episode.getProduction()}')),
+          ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
             this._episode.getRating() == null ?  // Shows '-' if there's no rating
@@ -1717,6 +1741,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
   DateAndTime _selectedDateAndTime = DateAndTime();  //Date and time currently selected
   String _episodeNotes;
   double _episodeRating;
+  String _episodeProduction;
 
   _EditEpisodeScreenState(this._episode){
     // Builds list of all seasons
@@ -1733,6 +1758,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
     this._selectedDateAndTime = this._episode.getAiringDateAndTime();
     this._episodeNotes = this._episode.getNotes();
     this._episodeRating = this._episode.getRating();
+    this._episodeProduction = this._episode.getProduction();
   }
 
   @override
@@ -1893,6 +1919,15 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
               }
             )),
             Text('minutes')
+          ]),
+          Row(children:[  // Production
+            Text('Production: ', style: Constants.textStyleLabels),
+            Container(width: 270, child: TextFormField(
+              initialValue: this._episodeProduction,
+              onSaved: (String value) {
+                this._episodeProduction = value.isEmpty ? null : value;
+              },
+            ))
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
@@ -2339,7 +2374,8 @@ class Show {
 
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate episode number
-  void addEpisode({String name, Season season, String type, bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes, double rating}){
+  void addEpisode({String name, Season season, String type, bool watched, DateAndTime airingDateAndTime, 
+  int durationMinutes, String notes, double rating, String production}){
     if(season == null || season.getName() == "No season"){  // No season selected, use show's base episode list
       int nextEpisodeNumber;
       Iterable<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == (type ==  null ? 'E' : type);} );
@@ -2358,7 +2394,8 @@ class Show {
         airingDateAndTime: airingDateAndTime, 
         durationMinutes: durationMinutes,
         notes: notes,
-        rating: rating
+        rating: rating,
+        production: production
       ));
     }
     else{  // Calls the season's addEpisode() function
@@ -2369,7 +2406,8 @@ class Show {
         airingDateAndTime: airingDateAndTime,
         durationMinutes: durationMinutes,
         notes: notes,
-        rating: rating
+        rating: rating,
+        production: production
       );
     }
   }
@@ -2491,7 +2529,8 @@ class Season{
 
   List<Episode> getEpisodes() => this.episodes;
   // Adds a new episode using the appropriate season number
-  void addEpisode({String name, String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes, String notes, double rating}){
+  void addEpisode({String name, String type='E', bool watched, DateAndTime airingDateAndTime, int durationMinutes, 
+  String notes, double rating, String production}){
     int nextEpisodeNumber;
     Iterable<Episode> sameTypeEpisodes = this.episodes.where( (episode){return episode.getType() == (type ==  null ? 'E' : type);} );
     
@@ -2509,7 +2548,8 @@ class Season{
       airingDateAndTime: airingDateAndTime, 
       durationMinutes: durationMinutes,
       notes: notes,
-      rating: rating
+      rating: rating,
+      production: production
     ));
   }
 
@@ -2553,8 +2593,10 @@ class Episode{
   Season parentSeason;  // Reference to the season which contains this episode. If null, episode has no season.
   String notes;
   double rating;
+  String production;
 
-  Episode(this.number, Show parentShow, Season parentSeason, {this.name="", this.type, this.watched=false, this.airingDateAndTime, this.durationMinutes, this.notes="", this.rating}){
+  Episode(this.number, Show parentShow, Season parentSeason, {this.name="", this.type, this.watched=false, 
+  this.airingDateAndTime, this.durationMinutes, this.notes="", this.rating, this.production}){
     this.setParentShow(parentShow);
     this.setParentSeason(parentSeason);
     this.type = this.type == null ? Constants.EPISODETYPES['Episode'] : this.type;
@@ -2587,6 +2629,9 @@ class Episode{
 
   String getNotes() => this.notes;
   void setNotes(String newNote) => this.notes = newNote;
+
+  String getProduction() => this.production;
+  void setProduction(String newProduction) => this.production = newProduction;
 
   double getRating() => this.rating;
   void setRating(double newRating){
