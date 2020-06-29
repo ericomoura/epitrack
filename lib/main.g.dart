@@ -12,6 +12,7 @@ Show _$ShowFromJson(Map<String, dynamic> json) {
     notes: json['notes'] as String,
     rating: (json['rating'] as num)?.toDouble(),
     author: json['author'] as String,
+    source: json['source'] as String,
   )
     ..seasons = (json['seasons'] as List)
         ?.map((e) =>
@@ -30,6 +31,7 @@ Map<String, dynamic> _$ShowToJson(Show instance) => <String, dynamic>{
       'notes': instance.notes,
       'rating': instance.rating,
       'author': instance.author,
+      'source': instance.source,
     };
 
 Season _$SeasonFromJson(Map<String, dynamic> json) {

@@ -146,6 +146,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
   String _newShowNotes;
   double _newShowRating;
   String _newShowAuthor;
+  String _selectedSource;
 
   @override
   Widget build(BuildContext context) {
@@ -182,15 +183,38 @@ class _NewShowScreenState extends State<NewShowScreen>{
               }
             ))
           ]),
-          Row(children: [  // Notes
-            Text('Notes: ', style: Constants.textStyleLabels),
-            Container(width: 300, child: TextFormField(
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
-              onSaved: (String value) {
-                this._newShowNotes = value;
+          Row(children: [  // Source
+            Text('Source: ', style: Constants.textStyleLabels),
+            DropdownButton(  // Source dropdown
+              hint: Text('No source selected'),
+              value: this._selectedSource,
+              onChanged: (newValue){
+                setState((){
+                  this._selectedSource = newValue;
+                });
               },
-            ))
+              items: Constants.EPISODESOURCES.map((source){
+                return DropdownMenuItem(
+                  child: new Text(source),
+                  value: source
+                );
+              }).toList()
+            ),
+            ButtonTheme(  // Remove source button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._selectedSource == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._selectedSource == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._selectedSource = null;
+                  });
+                },
+              )
+            )
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
@@ -234,6 +258,16 @@ class _NewShowScreenState extends State<NewShowScreen>{
               )
             )
           ]),
+          Row(children: [  // Notes
+            Text('Notes: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: TextFormField(
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              onSaved: (String value) {
+                this._newShowNotes = value;
+              },
+            ))
+          ]),
           RaisedButton(  // Submit
             color: Constants.highlightColor,
             child: Text('Add show'),
@@ -245,7 +279,8 @@ class _NewShowScreenState extends State<NewShowScreen>{
                   this._newShowName,
                   notes: this._newShowNotes,
                   rating: this._newShowRating,
-                  author: this._newShowAuthor
+                  author: this._newShowAuthor,
+                  source: this._selectedSource
                 ));
 
                 Utils.saveShowsToJson();
@@ -347,6 +382,10 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           Row(children:[  // Author
             Text('Author: ', style: Constants.textStyleLabels),
             Container(width: 300, child: Text(this._show.getAuthor() == null ? '-' : '${this._show.getAuthor()}')),
+          ]),
+          Row(children:[  // Source
+            Text('Source: ', style: Constants.textStyleLabels),
+            Container(width: 300, child: Text(this._show.getSource() == null ? '-' : '${this._show.getSource()}')),
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
@@ -550,6 +589,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
   String _showNotes;
   double _showRating;
   String _showAuthor;
+  String _selectedSource;
 
   _EditShowScreenState(this._show){
     // Initializes form values
@@ -557,6 +597,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
     this._showNotes = this._show.getNotes();
     this._showRating = this._show.getRating();
     this._showAuthor = this._show.getAuthor();
+    this._selectedSource = this._show.getSource();
   }
 
   @override
@@ -573,7 +614,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
   }
 
   Widget _buildEditShowForm(){
-    return Form(
+    return SingleChildScrollView(child: Form(
       key: this._formKey,
       child: Column(
         children: <Widget>[
@@ -595,6 +636,39 @@ class _EditShowScreenState extends State<EditShowScreen>{
                 this._showAuthor = value.isEmpty ? null : value;
               },
             )),
+          ]),
+          Row(children: [  // Source
+            Text('Source: ', style: Constants.textStyleLabels),
+            DropdownButton(  // Source dropdown
+              hint: Text('No source selected'),
+              value: this._selectedSource,
+              onChanged: (newValue){
+                setState((){
+                  this._selectedSource = newValue;
+                });
+              },
+              items: Constants.EPISODESOURCES.map((source){
+                return DropdownMenuItem(
+                  child: new Text(source),
+                  value: source
+                );
+              }).toList()
+            ),
+            ButtonTheme(  // Remove source button
+              minWidth: 0,
+              child: RaisedButton(
+                color: this._selectedSource == null ? Constants.backgroundColor : Constants.highlightColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._selectedSource == null ? Constants.highlightColor : null
+                ),
+                onPressed: () {
+                  setState((){
+                    this._selectedSource = null;
+                  });
+                },
+              )
+            )
           ]),
           Row(children: [  // Rating
             Text('Rating: ', style: Constants.textStyleLabels),
@@ -660,6 +734,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
                 this._show.setNotes(this._showNotes);
                 this._show.setRating(this._showRating);
                 this._show.setAuthor(this._showAuthor);
+                this._show.setSource(this._selectedSource);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -671,7 +746,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
           )
         ]
       )
-    );
+    ));
   }
 }
 
@@ -715,7 +790,6 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
           Row(children: [  // Name
             Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Name'),
               onSaved: (String value) {
                 this._newSeasonName = value;
               },
@@ -724,7 +798,6 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
           Row(children: [  // Production
             Text('Production: ', style: Constants.textStyleLabels),
             Container(width: 270, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Production'),
               onSaved: (String value) {
                 this._newSeasonProduction = value.isEmpty ? null : value;
               },
@@ -775,7 +848,6 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Notes'),
               keyboardType: TextInputType.multiline,
               maxLines: null,
               onSaved: (String value) {
@@ -1077,6 +1149,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
     for (Season season in _show.getSeasons()){
       this._seasons.add(season);
     }
+
+    this._selectedType = 'E';
   }
 
   @override
@@ -1116,7 +1190,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Episode name
             Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(  // Episode name text box
-              decoration: InputDecoration(labelText: 'Name'),   
               onSaved: (String value){
                 this._newEpisodeName = value;
               },
@@ -1186,8 +1259,11 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ButtonTheme(  // Remove date button
               minWidth: 0,
               child: RaisedButton(
-                color: Constants.highlightColor,
-                child: Icon(Icons.cancel),
+                color: this._selectedDateAndTime.hasDate() ? Constants.highlightColor :  Constants.backgroundColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._selectedDateAndTime.hasDate() ? null :  Constants.highlightColor
+                ),
                 onPressed: () {
                   setState((){
                     this._selectedDateAndTime.setYear(null);
@@ -1223,8 +1299,11 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ButtonTheme(  // Remove time button
               minWidth: 0,
               child: RaisedButton(
-                color: Constants.highlightColor,
-                child: Icon(Icons.cancel),
+                color: this._selectedDateAndTime.hasTime() ? Constants.highlightColor :  Constants.backgroundColor,
+                child: Icon(
+                  Icons.cancel,
+                  color:  this._selectedDateAndTime.hasTime() ? null  :  Constants.highlightColor
+                ),
                 onPressed: () {
                   setState((){
                     this._selectedDateAndTime.setHour(null);
@@ -1237,7 +1316,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Duration
             Text('Duration: ', style: Constants.textStyleLabels),
             Container(width: 100, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Duration'),
               keyboardType: TextInputType.number,
               inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
               onSaved: (String value){
@@ -1251,7 +1329,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Production
             Text('Production: ', style: Constants.textStyleLabels),
             Container(width: 270, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Production'),
               onSaved: (String value) {
                 this._newEpisodeProduction = value.isEmpty ? null : value;
               },
@@ -1302,7 +1379,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Notes'),
               keyboardType: TextInputType.multiline,
               maxLines: null,
               onSaved: (String value){
@@ -1349,7 +1425,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Number of episodes
             Text('Number of episodes: ', style: Constants.textStyleLabels),
             Container(width: 100, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Number'),
               keyboardType: TextInputType.number,
               inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
               initialValue: this._numberOfEpisodes.toString(),
@@ -1360,8 +1435,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           ]),
           Row(children: [  // Name
             Text('Names: ', style: Constants.textStyleLabels),
-            Container(width: 300, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Names'),   
+            Container(width: 300, child: TextFormField(  
               onSaved: (String value){
                 this._newEpisodeName = value;
               },
@@ -1431,8 +1505,11 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ButtonTheme(  // Remove date button
               minWidth: 0,
               child: RaisedButton(
-                color: Constants.highlightColor,
-                child: Icon(Icons.cancel),
+                color: this._selectedDateAndTime.hasDate() ? Constants.highlightColor :  Constants.backgroundColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._selectedDateAndTime.hasDate() ? null :  Constants.highlightColor
+                ),
                 onPressed: () {
                   setState((){
                     this._selectedDateAndTime.setYear(null);
@@ -1468,8 +1545,11 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ButtonTheme(  // Remove time button
               minWidth: 0,
               child: RaisedButton(
-                color: Constants.highlightColor,
-                child: Icon(Icons.cancel),
+                color: this._selectedDateAndTime.hasTime() ? Constants.highlightColor :  Constants.backgroundColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._selectedDateAndTime.hasTime() ? null :  Constants.highlightColor
+                ),
                 onPressed: () {
                   setState((){
                     this._selectedDateAndTime.setHour(null);
@@ -1482,7 +1562,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Episode interval
             Text('Episode every: ', style: Constants.textStyleLabels),
             Container(width: 100, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Interval'),
               keyboardType: TextInputType.number,
               inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
               initialValue: this._newEpisodeInterval.toString(),
@@ -1497,7 +1576,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Duration
             Text('Duration: ', style: Constants.textStyleLabels),
             Container(width: 100, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Duration'),
               keyboardType: TextInputType.number,
               inputFormatters: [WhitelistingTextInputFormatter.digitsOnly],
               onSaved: (String value){
@@ -1511,7 +1589,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Production
             Text('Production: ', style: Constants.textStyleLabels),
             Container(width: 270, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Production'),
               onSaved: (String value) {
                 this._newEpisodeProduction = value.isEmpty ? null : value;
               },
@@ -1562,7 +1639,6 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Notes'),
               keyboardType: TextInputType.multiline,
               maxLines: null,
               onSaved: (String value){
@@ -1858,8 +1934,11 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             ButtonTheme(  // Remove date button
               minWidth: 0,
               child: RaisedButton(
-                color: Constants.highlightColor,
-                child: Icon(Icons.cancel),
+                color: this._selectedDateAndTime.hasDate() ? Constants.highlightColor :  Constants.backgroundColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._selectedDateAndTime.hasDate() ? null :  Constants.highlightColor
+                ),
                 onPressed: () {
                   setState((){
                     this._selectedDateAndTime.setYear(null);
@@ -1895,8 +1974,11 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             ButtonTheme(  // Remove time button
               minWidth: 0,
               child: RaisedButton(
-                color: Constants.highlightColor,
-                child: Icon(Icons.cancel),
+                color: this._selectedDateAndTime.hasTime() ? Constants.highlightColor :  Constants.backgroundColor,
+                child: Icon(
+                  Icons.cancel,
+                  color: this._selectedDateAndTime.hasTime() ? null :  Constants.highlightColor
+                ),
                 onPressed: () {
                   setState((){
                     this._selectedDateAndTime.setHour(null);
@@ -1974,7 +2056,6 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
           Row(children: [  // Notes
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: TextFormField(
-              decoration: InputDecoration(labelText: 'Notes'),
               keyboardType: TextInputType.multiline,
               maxLines: null,
               initialValue: _episodeNotes,
@@ -2336,8 +2417,9 @@ class Show {
   String notes;
   double rating;
   String author;
+  String source;
 
-  Show(this.name, {this.notes, this.rating, this.author});
+  Show(this.name, {this.notes, this.rating, this.author, this.source});
 
   String getName() => this.name;
   void setName(String newName) => this.name = newName;
@@ -2347,6 +2429,9 @@ class Show {
 
   String getAuthor() => this.author;
   void setAuthor(String newAuthor) => this.author = newAuthor;
+
+  String getSource() => this.source;
+  void setSource(String newSource) => this.source = newSource;
 
   double getRating() => this.rating;
   void setRating(double newRating){
@@ -2781,6 +2866,8 @@ class Constants{
     'Trailer' : 'T',
     'Miscellaneous' : 'MISC'
   };
+
+  static const List<String> EPISODESOURCES = ['Book', 'Comic', 'Manga', 'Light Novel', 'Manhwa', 'Webtoon', 'Game', 'Original'];
 
   static int minYear = -5000;
   static int maxYear = 5000;
