@@ -2201,7 +2201,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
@@ -2225,7 +2225,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
@@ -2249,7 +2249,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
@@ -2273,7 +2273,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
@@ -2297,7 +2297,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
@@ -2321,7 +2321,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
@@ -2345,7 +2345,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
@@ -2369,7 +2369,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text(episode.getAiringDateAndTime().getDateAndTimeString(), textAlign: TextAlign.right),
+          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
@@ -2778,7 +2778,7 @@ class DateAndTime {
   bool hasDate() => this.year != null;
   bool hasTime() => this.hour != null;
 
-  String getDateString() => '${Utils.padLeadingZeros(this.year, 4)}-${Utils.padLeadingZeros(this.month, 2)}-${Utils.padLeadingZeros(this.day, 2)}';
+  String getDateString() => '${Utils.padLeadingZeros(this.year, 4)}-${Utils.padLeadingZeros(this.month, 2)}-${Utils.padLeadingZeros(this.day, 2)}, ${Constants.DAYSOFTHEWEEKSHORT[this.getDateTimeObject().weekday-1]}';
   String getTimeString() => '${Utils.padLeadingZeros(this.hour, 2)}:${Utils.padLeadingZeros(this.minute, 2)}';
   String getDateAndTimeString({bool allowJustTime=false}){  // Won't return time without a date unless 'allowJustTime' is true
     if(this.hasDate()){
@@ -2797,6 +2797,25 @@ class DateAndTime {
         return '-';
       }
     }
+  }
+  String getTimeDifferenceString(DateTime otherTime){  // Returns null if there's no date or if the difference is too small
+    if(this.hasDate()){
+      Duration difference = this.getDateTimeObject().difference(otherTime);
+      if(difference.inDays > 0){
+        return '${difference.inDays} days';
+      }
+      else if(difference.inHours > 0){
+        return '${difference.inHours} hours';
+      }
+      else if(difference.inMinutes > 0){
+        return '${difference.inMinutes} minutes';
+      }
+      else if(difference.inSeconds > 0){
+        return '${difference.inSeconds} seconds';
+      }
+    }
+
+    return null;
   }
 
   DateTime getDateTimeObject(){
@@ -2868,6 +2887,8 @@ class Constants{
   };
 
   static const List<String> EPISODESOURCES = ['Book', 'Comic', 'Manga', 'Light Novel', 'Manhwa', 'Webtoon', 'Game', 'Original'];
+  static const List<String> DAYSOFTHEWEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  static const List<String> DAYSOFTHEWEEKSHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   static int minYear = -5000;
   static int maxYear = 5000;
