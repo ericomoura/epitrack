@@ -2408,6 +2408,79 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
 
 }
 
+class OverdueEpisodesScreen extends StatefulWidget{
+  @override
+  _OverdueEpisodesScreenState createState() => _OverdueEpisodesScreenState();
+}
+class _OverdueEpisodesScreenState extends State<OverdueEpisodesScreen>{
+  final List<Episode> _overdueEpisodes = List<Episode>();
+  final List<Widget> _overdueList = List<Widget>();
+
+  _OverdueEpisodesScreenState(){
+    // Builds overdue episodes list
+    for(Show show in EpitrackApp.showsList){  // Goes through all shows
+      for(Episode episode in show.getEpisodes()){  // Episodes without a season
+        if(episode.getWatched() == false
+        && episode.getAiringDateAndTime().hasDate() 
+        && episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now())){  // Is overdue
+          this._overdueEpisodes.add(episode);
+        }
+      }
+      for(Season season in show.getSeasons()){
+        for(Episode episode in season.getEpisodes()){  // Episodes in a season
+          if(episode.getWatched() == false
+          && episode.getAiringDateAndTime().hasDate() 
+          && episode.getAiringDateAndTime().getDateTimeObject().isBefore(DateTime.now())){  // Is overdue
+            this._overdueEpisodes.add(episode);
+          }
+        }
+      }
+    }
+    this._overdueEpisodes.sort(Comparators.compareEpisodesAiringDateAndTime);
+
+    for(Episode episode in this._overdueEpisodes){
+      this._overdueList.add(ListTile(
+          title: Text( episode.getParentSeason() == null ?
+            'E${episode.getNumber()} of ${episode.getParentShow()}'
+            :
+            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+          ),
+          subtitle: Text('${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} ago | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+            .then((_){
+              setState((){
+                //Updates episode tile
+              });
+            });
+          },
+      ));
+      
+      this._overdueList.add(Divider());
+    }
+    this._overdueList.removeLast();  // Remove hanging divider
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          '${Constants.appbarPrefix}Overdue episodes',
+          style: TextStyle(fontSize: Constants.appbarFontSize)
+        )
+      ),
+      drawer: Utils.buildEpitrackDrawer(context),
+      body: ListView.builder(
+        itemCount: this._overdueList.length,
+        itemBuilder: (BuildContext context, int listIndex){
+          return this._overdueList[listIndex];
+        }
+      )
+    );
+  }
+
+}
 
 @JsonSerializable(explicitToJson: true)
 class Show {
@@ -2801,17 +2874,17 @@ class DateAndTime {
   String getTimeDifferenceString(DateTime otherTime){  // Returns null if there's no date or if the difference is too small
     if(this.hasDate()){
       Duration difference = this.getDateTimeObject().difference(otherTime);
-      if(difference.inDays > 0){
-        return '${difference.inDays} days';
+      if(difference.inDays.abs() >= 1){
+        return '${difference.inDays.abs()} day(s)';
       }
-      else if(difference.inHours > 0){
-        return '${difference.inHours} hours';
+      else if(difference.inHours.abs() >= 1){
+        return '${difference.inHours.abs()} hour(s)';
       }
-      else if(difference.inMinutes > 0){
-        return '${difference.inMinutes} minutes';
+      else if(difference.inMinutes.abs() >= 1){
+        return '${difference.inMinutes.abs()} minute(s)';
       }
-      else if(difference.inSeconds > 0){
-        return '${difference.inSeconds} seconds';
+      else if(difference.inSeconds.abs() >= 1){
+        return '${difference.inSeconds.abs()} second(s)';
       }
     }
 
@@ -3010,6 +3083,16 @@ class Utils{
 
               Navigator.pop(context);  // Closes previous screen to avoid keeping outdade states
               Navigator.push(context, MaterialPageRoute(builder: (context) => UpcomingEpisodesScreen()));
+            },
+          ),
+          Divider(),
+          ListTile(  // Upcoming episodes
+            title: Text('Overdue episodes'),
+            onTap: (){
+              Navigator.pop(context);  // Closes drawer
+
+              Navigator.pop(context);  // Closes previous screen to avoid keeping outdade states
+              Navigator.push(context, MaterialPageRoute(builder: (context) => OverdueEpisodesScreen()));
             },
           )
         ]
