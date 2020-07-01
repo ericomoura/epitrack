@@ -2369,7 +2369,7 @@ class _UpcomingEpisodesScreenState extends State<UpcomingEpisodesScreen>{
             :
             'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
           ),
-          subtitle: Text('In ${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
+          subtitle: Text('${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
             .then((_){
