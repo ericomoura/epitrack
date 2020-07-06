@@ -143,6 +143,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
   final _formKey = GlobalKey<FormState>();
 
   String _newShowName = '';
+  String _newShowNickname;
   String _newShowNotes;
   double _newShowRating;
   String _newShowAuthor;
@@ -172,6 +173,15 @@ class _NewShowScreenState extends State<NewShowScreen>{
               validator: Validators.newShowName,
               onSaved: (String value) {
                 this._newShowName = value;
+              }
+            ))
+          ]),
+          Row( children:[  // Nickname
+            Text('Nickname: ', style: Constants.textStyleLabels),
+            Container(width: 275, child: TextFormField(
+              validator: Validators.newShowName,
+              onSaved: (String value) {
+                this._newShowNickname = value;
               }
             ))
           ]),
@@ -277,6 +287,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
 
                 EpitrackApp.showsList.add(Show(
                   this._newShowName,
+                  nickname: this._newShowNickname,
                   notes: this._newShowNotes,
                   rating: this._newShowRating,
                   author: this._newShowAuthor,
@@ -361,6 +372,10 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           Row(children:[  // Name
             Text('Name: ', style: Constants.textStyleLabels),
             Container(width: 300, child: Text('${this._show.getName()}')),
+          ]),
+          Row(children:[  // Nickname
+            Text('Nickname: ', style: Constants.textStyleLabels),
+            Container(width: 275, child: Text(this._show.getNickname() == null ? '-' : '${this._show.getNickname()}')),
           ]),
           Row(children: [  // Number of seasons
             Text('Number of seasons: ', style: Constants.textStyleLabels),
@@ -586,6 +601,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
   final _formKey = GlobalKey<FormState>();
 
   String _showName;
+  String _showNickname;
   String _showNotes;
   double _showRating;
   String _showAuthor;
@@ -594,6 +610,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
   _EditShowScreenState(this._show){
     // Initializes form values
     this._showName = this._show.getName();
+    this._showNickname = this._show.getNickname();
     this._showNotes = this._show.getNotes();
     this._showRating = this._show.getRating();
     this._showAuthor = this._show.getAuthor();
@@ -625,6 +642,16 @@ class _EditShowScreenState extends State<EditShowScreen>{
               validator: Validators.editShowName,
               onSaved: (String value) {
                 this._showName = value;
+              },
+            )),
+          ]),
+          Row(children:[  // Nickname
+            Text('Nickname: ', style: Constants.textStyleLabels),
+            Container(width: 275, child: TextFormField(
+              initialValue: this._showNickname,
+              validator: Validators.editShowName,
+              onSaved: (String value) {
+                this._showNickname = value;
               },
             )),
           ]),
@@ -735,6 +762,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
                 this._show.setRating(this._showRating);
                 this._show.setAuthor(this._showAuthor);
                 this._show.setSource(this._selectedSource);
+                this._show.setNickname(this._showNickname);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -901,7 +929,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${Constants.appbarPrefix}S${this._season.getNumber()} of ${this._season.getParentShow()}', 
+          '${Constants.appbarPrefix}S${this._season.getNumber()} of ${this._season.getParentShow().getName()}', 
           style: TextStyle(fontSize: Constants.appbarFontSize)
         )
       ),
@@ -1008,7 +1036,7 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${Constants.appbarPrefix}Editing S${this._season.getNumber()} of ${this._season.getParentShow()}',
+          '${Constants.appbarPrefix}Editing S${this._season.getNumber()} of ${this._season.getParentShow().getName()}',
           style: TextStyle(fontSize: Constants.appbarFontSize)
         )
       ),
@@ -1707,11 +1735,11 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
     return Scaffold(
       appBar: AppBar(
         title: this._episode.getParentSeason() == null ?   // Remove season number from appbar if there is no season
-          Text('${Constants.appbarPrefix}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
+          Text('${Constants.appbarPrefix}E${this._episode.getNumber()} of ${this._episode.getParentShow().getName()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
           : 
-          Text('${Constants.appbarPrefix}S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} ${this._episode.getParentShow()}',
+          Text('${Constants.appbarPrefix}S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} ${this._episode.getParentShow().getName()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
       ),
@@ -1843,12 +1871,12 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
       appBar: AppBar(
         title: this._episode.getParentSeason() == null ?   // Remove season number from appbar if there is no season
           Text(
-            '${Constants.appbarPrefix}Editing E${this._episode.getNumber()} of ${_episode.getParentShow()}',
+            '${Constants.appbarPrefix}Editing E${this._episode.getNumber()} of ${_episode.getParentShow().getName()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
           :
           Text(
-            '${Constants.appbarPrefix}Editing S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
+            '${Constants.appbarPrefix}Editing S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} of ${this._episode.getParentShow().getName()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
       ),
@@ -2485,6 +2513,7 @@ class _OverdueEpisodesScreenState extends State<OverdueEpisodesScreen>{
 @JsonSerializable(explicitToJson: true)
 class Show {
   String name;
+  String nickname;
   List<Season> seasons = List<Season>();
   List<Episode> episodes = List<Episode>();  // Episodes that don't have a season (e.g. specials, OVAs, etc.)
   String notes;
@@ -2492,10 +2521,13 @@ class Show {
   String author;
   String source;
 
-  Show(this.name, {this.notes, this.rating, this.author, this.source});
+  Show(this.name, {this.nickname, this.notes, this.rating, this.author, this.source});
 
   String getName() => this.name;
   void setName(String newName) => this.name = newName;
+
+  String getNickname() => this.nickname;
+  void setNickname(String newNickname) => this.nickname = newNickname;
 
   String getNotes() => this.notes;
   void setNotes(String newNote) => this.notes = newNote;
@@ -2626,7 +2658,7 @@ class Show {
   }
 
   @override
-  String toString() => this.name;
+  String toString() => this.nickname != null ? this.nickname : this.name;
 
   factory Show.fromJson(Map<String, dynamic> json) => _$ShowFromJson(json);
   Map<String, dynamic> toJson() => _$ShowToJson(this);

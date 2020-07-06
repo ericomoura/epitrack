@@ -9,6 +9,7 @@ part of 'main.dart';
 Show _$ShowFromJson(Map<String, dynamic> json) {
   return Show(
     json['name'] as String,
+    nickname: json['nickname'] as String,
     notes: json['notes'] as String,
     rating: (json['rating'] as num)?.toDouble(),
     author: json['author'] as String,
@@ -26,6 +27,7 @@ Show _$ShowFromJson(Map<String, dynamic> json) {
 
 Map<String, dynamic> _$ShowToJson(Show instance) => <String, dynamic>{
       'name': instance.name,
+      'nickname': instance.nickname,
       'seasons': instance.seasons?.map((e) => e?.toJson())?.toList(),
       'episodes': instance.episodes?.map((e) => e?.toJson())?.toList(),
       'notes': instance.notes,
