@@ -179,7 +179,6 @@ class _NewShowScreenState extends State<NewShowScreen>{
           Row( children:[  // Nickname
             Text('Nickname: ', style: Constants.textStyleLabels),
             Container(width: 275, child: TextFormField(
-              validator: Validators.newShowName,
               onSaved: (String value) {
                 this._newShowNickname = value;
               }
@@ -452,30 +451,35 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
   }
 
   Widget _buildSeasonsList(){
-    return ListView.builder(
-      itemCount: 2 * this._show.getSeasons().length,  // Accounts for dividers in the list
-      itemBuilder: (BuildContext context, int listIndex){
-        // Adds dividers between items
-        if(listIndex.isOdd){
-          return Divider();
+    return ReorderableListView(
+      children: this._show.getSeasons().map((season) => 
+        Container(
+          key: Key('${this._show.getSeasons().indexOf(season)}'),
+          decoration: Constants.decorationListDivider,
+          child: ListTile(
+            title: Text('$season'),
+            trailing: Icon(Icons.drag_handle),
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => SeasonDetailsScreen(season)))
+              .then((_){
+                setState((){});  // Update list
+              });
+            }
+          )
+        )
+      ).toList(),
+      onReorder: (int start, int current){
+        if(start < current){ // Dragged down
+          this._show.getSeasons().insert(current - 1, this._show.getSeasons().removeAt(start));  // Subtracts one to account for the item that was just removed
+        }
+        else if(current < start){ // Dragged up
+          this._show.getSeasons().insert(current, this._show.getSeasons().removeAt(start));
         }
 
-        final int seasonIndex = listIndex ~/ 2; // Adjusts index to take into account the dividers in the list
-        Season season = _show.getSeasons()[seasonIndex];
-
-        return ListTile(
-          title: Text('$season'),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => SeasonDetailsScreen(season)))
-            .then((_){
-              setState((){
-                // Update list
-              });
-            });
-          }
-        );
-
-      }
+        Utils.fixNumbers(this._show.getSeasons());
+        Utils.saveShowsToJson();
+        setState((){});  // Update list
+      },
     );
   }
 
@@ -649,7 +653,6 @@ class _EditShowScreenState extends State<EditShowScreen>{
             Text('Nickname: ', style: Constants.textStyleLabels),
             Container(width: 275, child: TextFormField(
               initialValue: this._showNickname,
-              validator: Validators.editShowName,
               onSaved: (String value) {
                 this._showNickname = value;
               },
@@ -993,7 +996,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
             child: Text('Remove season'),
             onPressed: (){
               this._season.getParentShow().getSeasons().remove(_season);
-              Utils.fixListNumbers(this._season.getParentShow().getSeasons());
+              Utils.fixNumbers(this._season.getParentShow().getSeasons());
 
               Utils.saveShowsToJson();
               Navigator.pop(context);
@@ -1807,11 +1810,11 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
             onPressed: (){
               if(this._episode.getParentSeason() == null){  // Episode has no season, remove from show's list
                 this._episode.getParentShow().getEpisodes().remove(_episode);
-                Utils.fixListNumbers(this._episode.getParentShow().getEpisodes());
+                Utils.fixNumbers(this._episode.getParentShow().getEpisodes());
               }
               else{  // Episode has a season, remove from season's list
                 this._episode.getParentSeason().getEpisodes().remove(_episode);
-                Utils.fixListNumbers(this._episode.getParentSeason().getEpisodes());
+                Utils.fixNumbers(this._episode.getParentSeason().getEpisodes());
               }
 
               Utils.saveShowsToJson();
@@ -3003,6 +3006,8 @@ class Constants{
   static double ratingStep = 0.5;  // 0.5 allows half stars, 1 only allows full stars
 
   static String appbarPrefix = 'Epitrack | ';
+
+  static BoxDecoration decorationListDivider = BoxDecoration(border: Border(bottom: BorderSide(width: 0.1)));
   
   // Fonts
   static double appbarFontSize = 17;
@@ -3045,6 +3050,13 @@ class Constants{
 }
 
 class Utils{
+
+  // Iterates through a list of seasons/episodes and sets the numbers in order. 'startIndex' is the starting point in the list and 'firstNumber' is the first number to be used.
+  static void fixNumbers(List list, {int startIndex=0, int firstNumber=1}){
+    for(int index = startIndex; index < list.length; index++){
+      list[index].setNumber(index + firstNumber);
+    }
+  }
 
   // Creates a list section header with the given children widgets
   static Container buildListSectionHeader({Widget child, String text}){
@@ -3195,15 +3207,6 @@ class Utils{
   // Formats decimals to two digits always
   static String truncateDecimals(double input, int numberOfDecimals){
     return NumberFormat('0.' + '0'*numberOfDecimals).format(input);
-  }
-
-  // Sets the number for every item in a list in order starting from 'initialNumber'
-  static void fixListNumbers(List<dynamic> list, {int initialNumber=1}){
-    int currentNumber = initialNumber;
-
-    for(var item in list){
-      item.setNumber(currentNumber++);
-    }
   }
 
 }
