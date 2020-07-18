@@ -228,7 +228,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
             )
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._newShowRating == null ?
               SmoothStarRating(  // Empty rating bar
                 starCount: Constants.ratingMax,
@@ -404,7 +404,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
             Container(width: 300, child: Text(this._show.getSource() == null ? '-' : '${this._show.getSource()}')),
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._show.getRating() == null ?  // Shows '-' if there's no rating
               Text('-') 
               : 
@@ -412,6 +412,28 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
                 starCount: Constants.ratingMax,
                 isReadOnly: true,
                 rating: this._show.getRating()
+              )
+          ]),
+          Row(children: [  // Average season rating
+            Text('  Average season rating: ', style: Constants.textStyleLabels),
+            this._show.getAverageSeasonRating() == null ?  // Shows '-' if there's no rating
+              Text('-') 
+              : 
+              SmoothStarRating(
+                starCount: Constants.ratingMax,
+                isReadOnly: true,
+                rating: this._show.getAverageSeasonRating()
+              )
+          ]),
+          Row(children: [  // Average episode rating
+            Text('  Average episode rating: ', style: Constants.textStyleLabels),
+            this._show.getAverageEpisodeRating() == null ?  // Shows '-' if there's no rating
+              Text('-') 
+              : 
+              SmoothStarRating(
+                starCount: Constants.ratingMax,
+                isReadOnly: true,
+                rating: this._show.getAverageEpisodeRating()
               )
           ]),
           Row(children:[  // Notes
@@ -698,7 +720,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
             )
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._showRating == null ?
               SmoothStarRating(  // Empty rating bar
                 starCount: Constants.ratingMax,
@@ -832,7 +854,7 @@ class _NewSeasonScreenState extends State<NewSeasonScreen> {
             ))
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._newSeasonRating == null ?
               SmoothStarRating(  // Empty rating bar
                 starCount: Constants.ratingMax,
@@ -974,7 +996,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
             Container(width: 270, child: Text(this._season.getProduction() == null ? '-' : '${this._season.getProduction()}')),
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._season.getRating() == null ?  // Shows '-' if there's no rating
               Text('-') 
               : 
@@ -982,6 +1004,17 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
                 starCount: Constants.ratingMax,
                 isReadOnly: true,
                 rating: this._season.getRating()
+              )
+          ]),
+          Row(children: [  // Average episode rating
+            Text('  Average episode rating: ', style: Constants.textStyleLabels),
+            this._season.getAverageEpisodeRating() == null ?  // Shows '-' if there's no rating
+              Text('-') 
+              : 
+              SmoothStarRating(
+                starCount: Constants.ratingMax,
+                isReadOnly: true,
+                rating: this._season.getAverageEpisodeRating()
               )
           ]),
           Row(children: [  // Notes
@@ -1079,7 +1112,7 @@ class _EditSeasonScreenState extends State<EditSeasonScreen>{
             ))
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._seasonRating == null ?
               SmoothStarRating(  // Empty rating bar
                 starCount: Constants.ratingMax,
@@ -1363,7 +1396,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ))
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._newEpisodeRating == null ?
               SmoothStarRating(  // Empty rating bar
                 starCount: Constants.ratingMax,
@@ -1623,7 +1656,7 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
             ))
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._newEpisodeRating == null ?
               SmoothStarRating(  // Empty rating bar
                 starCount: Constants.ratingMax,
@@ -1787,7 +1820,7 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
             Container(width: 270, child: Text(this._episode.getProduction() == null ? '-' : '${this._episode.getProduction()}')),
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._episode.getRating() == null ?  // Shows '-' if there's no rating
               Text('-') 
               : 
@@ -2040,7 +2073,7 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
             ))
           ]),
           Row(children: [  // Rating
-            Text('Rating: ', style: Constants.textStyleLabels),
+            Text('Your rating: ', style: Constants.textStyleLabels),
             this._episodeRating == null ?
               SmoothStarRating(  // Empty rating bar
                 starCount: Constants.ratingMax,
@@ -2546,19 +2579,64 @@ class Show {
       this.rating = null;
     }
     else{
-      // Adjusts rating to closest valid value
-      if(newRating > Constants.ratingMax){  // Caps at max
-        adjustedRating = Constants.ratingMax.toDouble();
-      }
-      else if(newRating < Constants.ratingMin){  // Caps at min
-        adjustedRating = Constants.ratingMin.toDouble();
-      }
-      else{  // Rounds to nearest multiple of 'ratingStep'
-        adjustedRating = ((newRating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
-      }
-
-      // Updates rating
+      adjustedRating = Utils.adjustRating(newRating);
       this.rating = adjustedRating;
+    }
+  }
+
+  // Returns average user rating of all seasons. Ignore seasons with no rating.
+  double getAverageSeasonRating(){
+    double averageRating = 0;
+    bool hasRatings = false; // Flag to differentiate between average rating of 0 and no ratings found
+
+    for(Season season in this.getSeasons()){
+      double seasonRating = season.getRating();
+      if(seasonRating != null){
+        hasRatings = true;
+        averageRating += seasonRating;
+      }
+    }
+    averageRating /= this.getSeasons().length;
+
+    if(hasRatings){
+      return Utils.adjustRating(averageRating);
+    }
+    else{
+      return null; // Return null if no seasons have rating
+    }
+  }
+
+  // Returns average user rating of all episodes. Ignore episodes with no rating.
+  double getAverageEpisodeRating(){
+    double averageRating = 0;
+    int numberOfEpisodes = 0;
+    bool hasRatings = false; // Flag to differentiate between average rating of 0 and no ratings found
+
+    for(Episode episode in this.getEpisodes()){  // Episodes without a season
+      double episodeRating = episode.getRating();
+      if(episodeRating != null){
+        hasRatings = true;
+        numberOfEpisodes += 1;
+        averageRating += episodeRating;
+      }
+    }
+    for(Season season in this.getSeasons()){  // Episodes with a season
+      for(Episode episode in season.getEpisodes()){
+        double episodeRating = episode.getRating();
+        if(episodeRating != null){
+          hasRatings = true;
+          numberOfEpisodes += 1;
+          averageRating += episodeRating;
+        }
+      }
+    }
+    averageRating /= numberOfEpisodes;
+
+    if(hasRatings){
+      return Utils.adjustRating(averageRating);
+    }
+    else{
+      return null; // Return null if no seasons have rating
     }
   }
 
@@ -2713,6 +2791,28 @@ class Season{
 
       // Updates rating
       this.rating = adjustedRating;
+    }
+  }
+
+  // Returns average user rating of all episodes. Ignore episodes with no rating.
+  double getAverageEpisodeRating(){
+    double averageRating = 0;
+    bool hasRatings = false; // Flag to differentiate between average rating of 0 and no ratings found
+
+    for(Episode episode in this.getEpisodes()){  // Episodes without a season
+      double episodeRating = episode.getRating();
+      if(episodeRating != null){
+        hasRatings = true;
+        averageRating += episodeRating;
+      }
+    }
+    averageRating /= this.getEpisodes().length;
+
+    if(hasRatings){
+      return Utils.adjustRating(averageRating);
+    }
+    else{
+      return null; // Return null if no seasons have rating
     }
   }
 
@@ -3045,6 +3145,24 @@ class Constants{
 }
 
 class Utils{
+
+  // Adjusts rating to fit within the scale
+  static double adjustRating(double rating){
+    double adjustedRating;
+
+    // Adjusts rating to closest valid value
+    if(rating > Constants.ratingMax){  // Caps at max
+      adjustedRating = Constants.ratingMax.toDouble();
+    }
+    else if(rating < Constants.ratingMin){  // Caps at min
+      adjustedRating = Constants.ratingMin.toDouble();
+    }
+    else{  // Rounds to nearest multiple of 'ratingStep'
+      adjustedRating = ((rating/Constants.ratingStep).roundToDouble() * Constants.ratingStep);
+    }
+
+    return adjustedRating;
+  }
 
   // Creates a list section header with the given children widgets
   static Container buildListSectionHeader({Widget child, String text}){
