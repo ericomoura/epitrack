@@ -180,6 +180,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
           Row( children:[  // Nickname
             Text('Nickname: ', style: Constants.textStyleLabels),
             Container(width: 275, child: TextFormField(
+              validator: Validators.newShowNickname,
               onSaved: (String value) {
                 this._newShowNickname = value.isEmpty ? null : value;
               }
@@ -3223,7 +3224,6 @@ class Validators{
 
     return null;  // Name is okay
   }
-
   static String editShowName(String value){
     // Tests if name is empty
     if (value.isEmpty) {
@@ -3240,6 +3240,18 @@ class Validators{
 
     return null;  // Name is okay
   }
+
+  static String newShowNickname(String value){
+    // Tests if there's already a show with the same nickname
+    for(Show show in EpitrackApp.showsList){
+      if(show.getNickname() == value){
+        return "There's already a show with that nickname";
+      }
+    }
+
+    return null;  // Name is okay
+  }
+  
 }
 
 class Comparators{
