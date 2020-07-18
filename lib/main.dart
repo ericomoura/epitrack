@@ -2499,27 +2499,39 @@ class _OverdueEpisodesScreenState extends State<OverdueEpisodesScreen>{
     }
     this._overdueEpisodes.sort(Comparators.compareEpisodesAiringDateAndTime);
 
-    for(Episode episode in this._overdueEpisodes){
-      this._overdueList.add(ListTile(
-          title: Text( episode.getParentSeason() == null ?
-            'E${episode.getNumber()} of ${episode.getParentShow()}'
-            :
-            'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
-          ),
-          subtitle: Text('${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} ago | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
-          onTap: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
-            .then((_){
-              setState((){
-                //Updates episode tile
+    if(this._overdueEpisodes.isNotEmpty){
+      for(Episode episode in this._overdueEpisodes){
+        this._overdueList.add(ListTile(
+            title: Text( episode.getParentSeason() == null ?
+              'E${episode.getNumber()} of ${episode.getParentShow()}'
+              :
+              'S${episode.getParentSeason().getNumber()}E${episode.getNumber()} of ${episode.getParentShow()}'
+            ),
+            subtitle: Text('${episode.getAiringDateAndTime().getTimeDifferenceString(DateTime.now())} ago | ${episode.getAiringDateAndTime().getDateAndTimeString()}', textAlign: TextAlign.right),
+            trailing: IconButton(
+                  icon: Icon(episode.getWatched() ? Icons.check_circle : Icons.check_circle_outline),
+                  color: episode.getWatched() ? Constants.mainColor : null,
+                  onPressed: (){
+                    setState((){
+                      episode.setWatched(!episode.getWatched());  // Toggles watched
+                      Utils.saveShowsToJson();
+                    });
+                  }
+                ),
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) => EpisodeDetailsScreen(episode)))
+              .then((_){
+                setState((){
+                  //Updates episode tile
+                });
               });
-            });
-          },
-      ));
-      
-      this._overdueList.add(Divider());
+            },
+        ));
+        
+        this._overdueList.add(Divider());
+      }
+      this._overdueList.removeLast();  // Remove hanging divider
     }
-    this._overdueList.removeLast();  // Remove hanging divider
   }
 
   @override
