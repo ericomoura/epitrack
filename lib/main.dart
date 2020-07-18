@@ -119,7 +119,8 @@ class _ShowsScreenState extends State<ShowsScreen>{
         
         Show currentShow = EpitrackApp.showsList[showIndex];
         return ListTile(
-          title: Text(currentShow.getName()),
+          title: Text('$currentShow'),
+          subtitle: currentShow.getNickname() != null ? Text(currentShow.getName()) : null,
           onTap: (){
             Navigator.push(context, MaterialPageRoute(builder: (context) => ShowDetailsScreen(currentShow)))
             .then((_){
@@ -179,9 +180,8 @@ class _NewShowScreenState extends State<NewShowScreen>{
           Row( children:[  // Nickname
             Text('Nickname: ', style: Constants.textStyleLabels),
             Container(width: 275, child: TextFormField(
-              validator: Validators.newShowName,
               onSaved: (String value) {
-                this._newShowNickname = value;
+                this._newShowNickname = value.isEmpty ? null : value;
               }
             ))
           ]),
@@ -328,7 +328,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
       child: Scaffold( 
         appBar: AppBar(
           title: Text(
-            '${Constants.appbarPrefix}${this._show.getName()}',
+            '${Constants.appbarPrefix}${this._show}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           ),
           bottom: TabBar(
@@ -649,9 +649,8 @@ class _EditShowScreenState extends State<EditShowScreen>{
             Text('Nickname: ', style: Constants.textStyleLabels),
             Container(width: 275, child: TextFormField(
               initialValue: this._showNickname,
-              validator: Validators.editShowName,
               onSaved: (String value) {
-                this._showNickname = value;
+                this._showNickname = value.isEmpty ? null : value;
               },
             )),
           ]),
@@ -929,7 +928,7 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${Constants.appbarPrefix}S${this._season.getNumber()} of ${this._season.getParentShow().getName()}', 
+          '${Constants.appbarPrefix}S${this._season.getNumber()} of ${this._season.getParentShow()}', 
           style: TextStyle(fontSize: Constants.appbarFontSize)
         )
       ),
@@ -1735,11 +1734,11 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
     return Scaffold(
       appBar: AppBar(
         title: this._episode.getParentSeason() == null ?   // Remove season number from appbar if there is no season
-          Text('${Constants.appbarPrefix}E${this._episode.getNumber()} of ${this._episode.getParentShow().getName()}',
+          Text('${Constants.appbarPrefix}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
           : 
-          Text('${Constants.appbarPrefix}S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} ${this._episode.getParentShow().getName()}',
+          Text('${Constants.appbarPrefix}S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
       ),
@@ -1871,12 +1870,12 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
       appBar: AppBar(
         title: this._episode.getParentSeason() == null ?   // Remove season number from appbar if there is no season
           Text(
-            '${Constants.appbarPrefix}Editing E${this._episode.getNumber()} of ${_episode.getParentShow().getName()}',
+            '${Constants.appbarPrefix}Editing E${this._episode.getNumber()} of ${_episode.getParentShow()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
           :
           Text(
-            '${Constants.appbarPrefix}Editing S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} of ${this._episode.getParentShow().getName()}',
+            '${Constants.appbarPrefix}Editing S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
       ),
