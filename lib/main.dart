@@ -149,6 +149,7 @@ class _NewShowScreenState extends State<NewShowScreen>{
   double _newShowRating;
   String _newShowAuthor;
   String _selectedSource;
+  List<String> _selectedGenres = List<String>();
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +186,56 @@ class _NewShowScreenState extends State<NewShowScreen>{
                 this._newShowNickname = value.isEmpty ? null : value;
               }
             ))
+          ]),
+          Row(children:[  // Genres
+            Text('Genres: ', style: Constants.textStyleLabels),
+            ButtonTheme(  // Choose genre button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.list),
+                onPressed: () {
+                  showDialog(  // Opens genre picker popup
+                    context: context,
+                    builder: (BuildContext context){
+                      return StatefulBuilder(
+                        builder: (BuildContext context, setState){
+                          return AlertDialog(
+                            title: Text('Genre picker'),
+                            backgroundColor: Constants.backgroundColor,
+                            actions: [
+                              FlatButton(
+                                color: Constants.mainColor,
+                                child: Text('Close'),
+                                onPressed: (){Navigator.pop(context);},
+                              )
+                            ],
+                            content: ListView.builder(
+                              itemCount: Constants.GENRES.length,
+                              itemBuilder: (BuildContext context, int index){
+                                return CheckboxListTile(
+                                  title: Text('${Constants.GENRES[index]}'),
+                                  value: this._selectedGenres.contains(Constants.GENRES[index]),
+                                  onChanged: (bool newValue){
+                                    setState((){
+                                      if(newValue == true){
+                                        this._selectedGenres.add(Constants.GENRES[index]);
+                                      }
+                                      else{
+                                        this._selectedGenres.remove(Constants.GENRES[index]);
+                                      }
+                                    });
+                                  }
+                                );
+                              })
+                          );
+                        }
+                      );
+                    }
+                  );
+                },
+              )
+            ),
           ]),
           Row(children: [  // Author
             Text('Author: ', style: Constants.textStyleLabels),
@@ -292,7 +343,8 @@ class _NewShowScreenState extends State<NewShowScreen>{
                   notes: this._newShowNotes,
                   rating: this._newShowRating,
                   author: this._newShowAuthor,
-                  source: this._selectedSource
+                  source: this._selectedSource,
+                  genres: this._selectedGenres
                 ));
 
                 Utils.saveShowsToJson();
@@ -385,6 +437,10 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           Row(children: [  // Number of episodes
             Text('Number of episodes: ', style: Constants.textStyleLabels),
             Text('${this._show.getNumberOfEpisodes()}'),
+          ]),
+          Row(children: [  // Genres
+            Text('Genres: ', style: Constants.textStyleLabels),
+            Text('${this._show.getGenresString()}'),
           ]),
           Row(children: [  // Total duration
             Text('Total duration: ', style: Constants.textStyleLabels),
@@ -629,6 +685,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
   double _showRating;
   String _showAuthor;
   String _selectedSource;
+  List<String> _selectedGenres = List<String>();
 
   _EditShowScreenState(this._show){
     // Initializes form values
@@ -638,6 +695,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
     this._showRating = this._show.getRating();
     this._showAuthor = this._show.getAuthor();
     this._selectedSource = this._show.getSource();
+    this._selectedGenres = List.from(_show.getGenresList());
   }
 
   @override
@@ -676,6 +734,56 @@ class _EditShowScreenState extends State<EditShowScreen>{
                 this._showNickname = value.isEmpty ? null : value;
               },
             )),
+          ]),
+          Row(children:[  // Genres
+            Text('Genres: ', style: Constants.textStyleLabels),
+            ButtonTheme(  // Choose genre button
+              minWidth: 0,
+              child: RaisedButton(
+                color: Constants.highlightColor,
+                child: Icon(Icons.list),
+                onPressed: () {
+                  showDialog(  // Opens genre picker popup
+                    context: context,
+                    builder: (BuildContext context){
+                      return StatefulBuilder(
+                        builder: (BuildContext context, setState){
+                          return AlertDialog(
+                            title: Text('Genre picker'),
+                            backgroundColor: Constants.backgroundColor,
+                            actions: [
+                              FlatButton(
+                                color: Constants.mainColor,
+                                child: Text('Close'),
+                                onPressed: (){Navigator.pop(context);},
+                              )
+                            ],
+                            content: ListView.builder(
+                              itemCount: Constants.GENRES.length,
+                              itemBuilder: (BuildContext context, int index){
+                                return CheckboxListTile(
+                                  title: Text('${Constants.GENRES[index]}'),
+                                  value: this._selectedGenres.contains(Constants.GENRES[index]),
+                                  onChanged: (bool newValue){
+                                    setState((){
+                                      if(newValue == true){
+                                        this._selectedGenres.add(Constants.GENRES[index]);
+                                      }
+                                      else{
+                                        this._selectedGenres.remove(Constants.GENRES[index]);
+                                      }
+                                    });
+                                  }
+                                );
+                              })
+                          );
+                        }
+                      );
+                    }
+                  );
+                },
+              )
+            ),
           ]),
           Row(children:[  // Author
             Text('Author: ', style: Constants.textStyleLabels),
@@ -785,6 +893,7 @@ class _EditShowScreenState extends State<EditShowScreen>{
                 this._show.setAuthor(this._showAuthor);
                 this._show.setSource(this._selectedSource);
                 this._show.setNickname(this._showNickname);
+                this._show.setGenres(this._selectedGenres);
 
                 Utils.saveShowsToJson();
                 Navigator.pop(context);
@@ -2565,8 +2674,9 @@ class Show {
   double rating;
   String author;
   String source;
+  List<String> genres = List<String>();
 
-  Show(this.name, {this.nickname, this.notes, this.rating, this.author, this.source});
+  Show(this.name, {this.nickname, this.notes, this.rating, this.author, this.source, this.genres});
 
   String getName() => this.name;
   void setName(String newName) => this.name = newName;
@@ -2689,6 +2799,20 @@ class Show {
         rating: rating,
         production: production
       );
+    }
+  }
+
+  List<String> getGenresList() => this.genres;
+  String getGenresString() => this.genres.isEmpty ? '-' : this.genres.join(', ');
+  void setGenres(List<String> newGenres) => this.genres = newGenres;
+  void addGenre(String genre){
+    if(genre.isNotEmpty && !this.genres.contains(genre)){
+      this.genres.add(genre);
+    }
+  }
+  void removeGenre(String genre){
+    if(genre.isNotEmpty && this.genres.contains(genre)){
+      this.genres.remove(genre);
     }
   }
 
@@ -3106,6 +3230,7 @@ class Constants{
   static const List<String> EPISODESOURCES = ['Book', 'Comic', 'Manga', 'Light Novel', 'Manhwa', 'Webtoon', 'Game', 'Original'];
   static const List<String> DAYSOFTHEWEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   static const List<String> DAYSOFTHEWEEKSHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static const List<String> GENRES = ['Action','Adventure', 'Comedy', 'Drama', 'Slice of Life', 'Fantasy', 'Magic', 'Supernatural', 'Horror', 'Mystery', 'Psychological', 'Romance', 'Sci-Fi', 'Cyberpunk', 'Game', 'Martial Arts', 'Kids', 'Historical', 'Military', 'Music', 'Psychological ', 'Post-Apocalyptic', 'Space', 'Sports'];
 
   static int minYear = -5000;
   static int maxYear = 5000;
@@ -3124,9 +3249,9 @@ class Constants{
   static TextStyle textStyleListHeaders = TextStyle(fontWeight: FontWeight.w300);
 
   // Theme
-  static const Color mainColor = bluegrey;
-  static const Color backgroundColor = bluegreyBackground;
-  static const Color highlightColor = bluegreyHighlight;
+  static const Color mainColor = pink;
+  static const Color backgroundColor = pinkBackground;
+  static const Color highlightColor = pinkHighlight;
 
   // Colors
   static const Color red = Colors.red;  // red
@@ -3153,6 +3278,9 @@ class Constants{
   static const Color yellow = Colors.yellow;  // yellow
   static const Color yellowBackground = Color(4294965700);  // yellow[100]
   static const Color yellowHighlight = Color(4294964637);  // yellow[200]
+  static const Color pink = Colors.pink;  // pink
+  static const Color pinkBackground = Color(4294491088);  // pink[100]
+  static const Color pinkHighlight = Color(4294217649);  // pink[200]
 
 }
 

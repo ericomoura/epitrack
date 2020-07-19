@@ -22,7 +22,8 @@ Show _$ShowFromJson(Map<String, dynamic> json) {
     ..episodes = (json['episodes'] as List)
         ?.map((e) =>
             e == null ? null : Episode.fromJson(e as Map<String, dynamic>))
-        ?.toList();
+        ?.toList()
+    ..genres = (json['genres'] as List)?.map((e) => e as String)?.toList();
 }
 
 Map<String, dynamic> _$ShowToJson(Show instance) => <String, dynamic>{
@@ -34,6 +35,7 @@ Map<String, dynamic> _$ShowToJson(Show instance) => <String, dynamic>{
       'rating': instance.rating,
       'author': instance.author,
       'source': instance.source,
+      'genres': instance.genres,
     };
 
 Season _$SeasonFromJson(Map<String, dynamic> json) {
