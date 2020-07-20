@@ -440,7 +440,7 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
           ]),
           Row(children: [  // Genres
             Text('Genres: ', style: Constants.textStyleLabels),
-            Text('${this._show.getGenresString()}'),
+            Container(width: 300, child: Text('${this._show.getGenresString()}')),
           ]),
           Row(children: [  // Total duration
             Text('Total duration: ', style: Constants.textStyleLabels),
@@ -496,16 +496,93 @@ class _ShowDetailsScreenState extends State<ShowDetailsScreen>{
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: Text('${this._show.getNotes()}')),
           ]),
-          RaisedButton(  // Remove show button
-            color: Constants.highlightColor,
-            child: Text('Remove show'),
-            onPressed: (){
-              EpitrackApp.showsList.remove(_show);
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+              RaisedButton(  // Remove show button
+                color: Constants.highlightColor,
+                child: Text('Remove show'),
+                onPressed: (){
+                  EpitrackApp.showsList.remove(_show);
 
-              Utils.saveShowsToJson();
-              Navigator.pop(context);
-            },
-          )
+                  Utils.saveShowsToJson();
+                  Navigator.pop(context);
+                },
+              ),
+              RaisedButton(  // Copy show button
+                color: Constants.highlightColor,
+                child: Text('Copy show'),
+                onPressed: (){
+                  // Copies show details
+                  Show newShow = Show(
+                    this._show.getName() + '[COPY]',
+                    nickname: this._show.getNickname(),
+                    notes: this._show.getNotes(),
+                    rating: this._show.getRating(),
+                    author: this._show.getAuthor(),
+                    source: this._show.getSource(),
+                    genres: this._show.getGenresList()
+                  );
+
+                  // Copies standalone episodes
+                  for(Episode episode in this._show.getEpisodes()){
+                    newShow.addEpisode(
+                      name: episode.getName(),
+                      season: null,
+                      type: episode.getType(),
+                      watched: episode.getWatched(),
+                      airingDateAndTime: DateAndTime(
+                        year: episode.getAiringDateAndTime().year,
+                        month: episode.getAiringDateAndTime().month,
+                        day: episode.getAiringDateAndTime().day,
+                        hour: episode.getAiringDateAndTime().hour,
+                        minute: episode.getAiringDateAndTime().minute
+                      ),
+                      durationMinutes: episode.getDurationMinutes(),
+                      notes: episode.getNotes(),
+                      rating: episode.getRating(),
+                      production: episode.getProduction() 
+                    );
+                  }
+
+                  // Copies season
+                  for(Season season in this._show.getSeasons()){
+                    // Copies season details
+                    Season newSeason = newShow.addSeason(
+                      name: season.getName(),
+                      notes: season.getNotes(),
+                      rating: season.getRating(),
+                      production: season.getProduction()
+                    );
+
+                    // Copies episodes in the season
+                    for(Episode episode in season.getEpisodes()){
+                      newSeason.addEpisode(
+                        name: episode.getName(),
+                        type: episode.getType(),
+                        watched: episode.getWatched(),
+                        airingDateAndTime: DateAndTime(
+                          year: episode.getAiringDateAndTime().year,
+                          month: episode.getAiringDateAndTime().month,
+                          day: episode.getAiringDateAndTime().day,
+                          hour: episode.getAiringDateAndTime().hour,
+                          minute: episode.getAiringDateAndTime().minute
+                        ),
+                        durationMinutes: episode.getDurationMinutes(),
+                        notes: episode.getNotes(),
+                        rating: episode.getRating(),
+                        production: episode.getProduction()
+                      );
+                    }
+                  }
+
+                  EpitrackApp.showsList.add(newShow);
+
+                  Utils.saveShowsToJson();
+                  Navigator.pop(context);
+                },
+              )
+          ])
         ]
       )
     );
@@ -1130,17 +1207,57 @@ class _SeasonDetailsScreenState extends State<SeasonDetailsScreen>{
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: Text('${this._season.getNotes()}')),
           ]),
-          RaisedButton(  // Remove season button
-            color: Constants.highlightColor,
-            child: Text('Remove season'),
-            onPressed: (){
-              this._season.getParentShow().getSeasons().remove(_season);
-              Utils.fixListNumbers(this._season.getParentShow().getSeasons());
+          Row(  // Bottom buttons
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+              RaisedButton(  // Remove season button
+                color: Constants.highlightColor,
+                child: Text('Remove season'),
+                onPressed: (){
+                  this._season.getParentShow().getSeasons().remove(_season);
+                  Utils.fixListNumbers(this._season.getParentShow().getSeasons());
 
-              Utils.saveShowsToJson();
-              Navigator.pop(context);
-            },
-          )
+                  Utils.saveShowsToJson();
+                  Navigator.pop(context);
+                },
+              ),
+              RaisedButton(  // Copy season button
+                color: Constants.highlightColor,
+                child: Text('Copy season'),
+                onPressed: (){
+                  // Copies season details
+                  Season newSeason = this._season.getParentShow().addSeason(
+                    name: this._season.getName() + '[COPY]',
+                    notes: this._season.getNotes(),
+                    rating: this._season.getRating(),
+                    production: this._season.getProduction()
+                  );
+
+                  // Copies episodes in the season
+                  for(Episode episode in this._season.getEpisodes()){
+                    newSeason.addEpisode(
+                      name: episode.getName(),
+                      type: episode.getType(),
+                      watched: episode.getWatched(),
+                      airingDateAndTime: DateAndTime(
+                        year: episode.getAiringDateAndTime().year,
+                        month: episode.getAiringDateAndTime().month,
+                        day: episode.getAiringDateAndTime().day,
+                        hour: episode.getAiringDateAndTime().hour,
+                        minute: episode.getAiringDateAndTime().minute
+                      ),
+                      durationMinutes: episode.getDurationMinutes(),
+                      notes: episode.getNotes(),
+                      rating: episode.getRating(),
+                      production: episode.getProduction()
+                    );
+                  }
+
+                  Utils.saveShowsToJson();
+                  Navigator.pop(context);
+                },
+              )
+          ])
         ]
       )
     );
@@ -1838,7 +1955,8 @@ class _NewEpisodeScreenState extends State<NewEpisodeScreen>{
                     ),
                     durationMinutes: this._newEpisodeDuration,
                     notes: this._newEpisodeNotes,
-                    rating: this._newEpisodeRating
+                    rating: this._newEpisodeRating,
+                    production: this._newEpisodeProduction
                   );
 
                   currentAiringDate.addTime(this._newEpisodeInterval, 0, 0);
@@ -1877,11 +1995,13 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
     return Scaffold(
       appBar: AppBar(
         title: this._episode.getParentSeason() == null ?   // Remove season number from appbar if there is no season
-          Text('${Constants.appbarPrefix}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
+          Text(
+            '${Constants.appbarPrefix}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
           : 
-          Text('${Constants.appbarPrefix}S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
+          Text(
+            '${Constants.appbarPrefix}S${this._episode.getParentSeason().getNumber()}E${this._episode.getNumber()} of ${this._episode.getParentShow()}',
             style: TextStyle(fontSize: Constants.appbarFontSize)
           )
       ),
@@ -1943,23 +2063,53 @@ class _EpisodeDetailsScreenState extends State<EpisodeDetailsScreen>{
             Text('Notes: ', style: Constants.textStyleLabels),
             Container(width: 300, child: Text(this._episode.getNotes()))
           ]),
-          RaisedButton(  // Remove episode
-            color: Constants.highlightColor,
-            child: Text('Remove episode'),
-            onPressed: (){
-              if(this._episode.getParentSeason() == null){  // Episode has no season, remove from show's list
-                this._episode.getParentShow().getEpisodes().remove(_episode);
-                Utils.fixListNumbers(this._episode.getParentShow().getEpisodes());
-              }
-              else{  // Episode has a season, remove from season's list
-                this._episode.getParentSeason().getEpisodes().remove(_episode);
-                Utils.fixListNumbers(this._episode.getParentSeason().getEpisodes());
-              }
+          Row(  // Bottom buttons
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+            RaisedButton(  // Remove episode
+              color: Constants.highlightColor,
+              child: Text('Remove episode'),
+              onPressed: (){
+                if(this._episode.getParentSeason() == null){  // Episode has no season, remove from show's list
+                  this._episode.getParentShow().getEpisodes().remove(_episode);
+                  Utils.fixListNumbers(this._episode.getParentShow().getEpisodes());
+                }
+                else{  // Episode has a season, remove from season's list
+                  this._episode.getParentSeason().getEpisodes().remove(_episode);
+                  Utils.fixListNumbers(this._episode.getParentSeason().getEpisodes());
+                }
 
-              Utils.saveShowsToJson();
-              Navigator.pop(context);
-            },
-          )
+                Utils.saveShowsToJson();
+                Navigator.pop(context);
+              },
+            ),
+            RaisedButton(  // Copy episode
+              color: Constants.highlightColor,
+              child: Text('Copy episode'),
+              onPressed: (){
+                this._episode.getParentShow().addEpisode(
+                  name: this._episode.getName() + '[COPY]',
+                  season: this._episode.getParentSeason(),
+                  type: this._episode.getType(),
+                  watched: this._episode.getWatched(),
+                  airingDateAndTime: DateAndTime(
+                      year: this._episode.getAiringDateAndTime().year,
+                      month: this._episode.getAiringDateAndTime().month,
+                      day: this._episode.getAiringDateAndTime().day,
+                      hour: this._episode.getAiringDateAndTime().hour,
+                      minute: this._episode.getAiringDateAndTime().minute
+                    ),
+                  durationMinutes: this._episode.getDurationMinutes(),
+                  notes: this._episode.getNotes(),
+                  rating: this._episode.getRating(),
+                  production: this._episode.getProduction()
+                );
+
+                Utils.saveShowsToJson();
+                Navigator.pop(context);
+              }
+            )
+          ])
         ],
       )
     );
@@ -2242,13 +2392,14 @@ class _EditEpisodeScreenState extends State<EditEpisodeScreen>{
                 this._formKey.currentState.save();
 
                 if(this._selectedSeason == this._episode.getParentSeason()    // Same season, just update values
-                    || (this._selectedSeason.getName() == 'No season' && this._episode.getParentSeason() == null)){
+                || (this._selectedSeason.getName() == 'No season' && this._episode.getParentSeason() == null)){
                   this._episode.setName(this._episodeName);
                   this._episode.setType(this._selectedType);
                   this._episode.setAiringDateAndTime(this._selectedDateAndTime);
                   this._episode.setDurationMinutes(this._episodeDuration);
                   this._episode.setNotes(this._episodeNotes);
                   this._episode.setRating(this._episodeRating);
+                  this._episode.setProduction(this._episodeProduction);
 
                   Utils.saveShowsToJson();
                   Navigator.pop(context);
@@ -2804,11 +2955,15 @@ class Show {
 
   List<String> getGenresList() => this.genres;
   String getGenresString() => this.genres.isEmpty ? '-' : this.genres.join(', ');
-  void setGenres(List<String> newGenres) => this.genres = newGenres;
+  void setGenres(List<String> newGenres){
+    this.genres = newGenres;
+    this.genres.sort(Comparators.compareStringsAlphabetic);
+  }
   void addGenre(String genre){
     if(genre.isNotEmpty && !this.genres.contains(genre)){
       this.genres.add(genre);
     }
+    this.genres.sort(Comparators.compareStringsAlphabetic);
   }
   void removeGenre(String genre){
     if(genre.isNotEmpty && this.genres.contains(genre)){
@@ -2818,7 +2973,7 @@ class Show {
 
   List<Season> getSeasons() => this.seasons;
   // Adds a new season using the appropriate season number
-  void addSeason({String name="", String notes, double rating, String production}){
+  Season addSeason({String name="", String notes, double rating, String production}){
     int nextSeasonNumber;
     
     if(this.seasons.isEmpty){
@@ -2828,7 +2983,10 @@ class Show {
       nextSeasonNumber = this.seasons.last.getNumber() + 1;
     }
 
-    this.seasons.add(Season(nextSeasonNumber, name, this, notes: notes, rating: rating, production: production));
+    Season newSeason = Season(nextSeasonNumber, name, this, notes: notes, rating: rating, production: production);
+    this.seasons.add(newSeason);
+
+    return newSeason;
   }
   // Returns the season with the given name
   Season getSeasonByName(String name){
@@ -3082,6 +3240,7 @@ class Episode{
       this.rating = adjustedRating;
     }
   }
+
 
   String toString() => (this.getParentSeason() == null ? '': 'S${this.getParentSeason().getNumber()}') 
     + '${this.getType()}${this.getNumber()}' 
@@ -3513,6 +3672,11 @@ class Validators{
 }
 
 class Comparators{
+
+  // Compares two strings in regard to alphabetic order
+  static int compareStringsAlphabetic(String a, String b){
+    return a.compareTo(b);
+  }
 
   // Compares two episodes' 'airingDateAndTime'. Returns -1 if a < b, 0 if a = b, 1 if a > b. Pushes episodes with no date to the end.
   static int compareEpisodesAiringDateAndTime(Episode a, Episode b){
